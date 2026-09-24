@@ -405,10 +405,10 @@ function roundedRectPath(c,x,y,w,h,r){w=Math.abs(w);h=Math.abs(h);r=Math.min(Mat
 
 let selectedShape=null,dragMode=null,dragStart=null,shapeBefore=null;
 function measureTextBlock(t){
-  const c=canvas.getContext('2d');c.font=(t.italic?'italic ':'')+(t.weight||400)+' '+Math.max(1,t.size)+'px "${t.fontFamily||'Pretendard'}";const spacing=+(t.letterSpacing||0),lines=String(t.content||'').split(/\r?\n/);return {lines,w:Math.max(1,...lines.map(line=>Math.max(1,c.measureText(line).width+Math.max(0,line.length-1)*spacing))),h:Math.max(1,(t.lineHeight||Math.round(t.size*1.2))*lines.length)};
+  const c=canvas.getContext('2d');c.font=(t.italic?'italic ':'')+(t.weight||400)+' '+Math.max(1,t.size)+'px "'+(t.fontFamily||'Pretendard')+'"';const spacing=+(t.letterSpacing||0),lines=String(t.content||'').split(/\r?\n/);return {lines,w:Math.max(1,...lines.map(line=>Math.max(1,c.measureText(line).width+Math.max(0,line.length-1)*spacing))),h:Math.max(1,(t.lineHeight||Math.round(t.size*1.2))*lines.length)};
 }
 function drawTextLine(c,line,x,y,t){const spacing=+(t.letterSpacing||0);if(!spacing){c.fillText(line,x,y);return}let total=0;for(const ch of line)total+=c.measureText(ch).width;total+=Math.max(0,line.length-1)*spacing;let sx=x;if((t.align||'left')==='center')sx-=total/2;else if((t.align||'left')==='right')sx-=total;for(const ch of line){c.fillText(ch,sx,y);sx+=c.measureText(ch).width+spacing}}
-function drawTextLayer(l){if(!l?.text)return;const t=l.text,c=l.canvas.getContext('2d'),meta=measureTextBlock(t);t.w=meta.w;t.h=meta.h;c.clearRect(0,0,canvas.width,canvas.height);c.save();c.font=(t.italic?'italic ':'')+(t.weight||400)+' '+Math.max(1,t.size)+'px "${t.fontFamily||'Pretendard'}";c.fillStyle=t.color||'#111111';c.textAlign='left';c.textBaseline='top';c.translate(t.x,t.y);c.rotate(t.angle||0);meta.lines.forEach((line,i)=>drawTextLine(c,line,0,i*(t.lineHeight||Math.round(t.size*1.2)),t));c.restore()}
+function drawTextLayer(l){if(!l?.text)return;const t=l.text,c=l.canvas.getContext('2d'),meta=measureTextBlock(t);t.w=meta.w;t.h=meta.h;c.clearRect(0,0,canvas.width,canvas.height);c.save();c.font=(t.italic?'italic ':'')+(t.weight||400)+' '+Math.max(1,t.size)+'px "'+(t.fontFamily||'Pretendard')+'"';c.fillStyle=t.color||'#111111';c.textAlign='left';c.textBaseline='top';c.translate(t.x,t.y);c.rotate(t.angle||0);meta.lines.forEach((line,i)=>drawTextLine(c,line,0,i*(t.lineHeight||Math.round(t.size*1.2)),t));c.restore()}
 function objectMeta(l){
   if(l?.line){
     const t=l.line;
