@@ -25,7 +25,10 @@ button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-ro
 .center{min-width:0;min-height:0;background:var(--work);display:grid;grid-template-rows:38px 1fr}
 .options{background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 12px;font-size:12px;overflow:auto;white-space:nowrap}
 .options label{display:flex;align-items:center;gap:6px}.options input[type=range]{width:100px}
-.shapeOptions{display:none;align-items:center;gap:10px}.shapeOptions.show{display:flex}.shapeOptions label{display:flex;align-items:center;gap:5px}
+.shapeOptions{display:none;align-items:center;gap:10px}.shapeOptions.show{display:flex}
+#selectionOptions.show,#gradientOptions.show{display:flex!important}
+#selectionOptions label,#gradientOptions label{display:flex;align-items:center;gap:5px}
+#selectionOptions select,#gradientOptions select{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:4px;padding:4px}.shapeOptions label{display:flex;align-items:center;gap:5px}
 .shapeOptions input[type=number]{width:58px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:4px;padding:4px}.shapeOptions input[type=color]{width:34px;height:26px;padding:0;border:0}
 .modalBack{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:500}.modalBack.show{display:flex}
 .textModal{width:min(460px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);box-shadow:0 18px 50px #0009;border-radius:8px;overflow:hidden}
@@ -91,7 +94,7 @@ button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-ro
 <div class="workspace">
   <aside class="toolbar">
     <button class="tool active" data-tool="move" title="선택/이동"><svg viewBox="0 0 24 24"><path d="m5 3 14 9-7 2-3 7z"/><path d="m12 14 4 6"/></svg></button>
-    <button class="tool" data-tool="rectSelect" title="사각 선택"><svg viewBox="0 0 24 24" stroke-dasharray="3 2"><rect x="4" y="5" width="16" height="14"/></svg></button>
+    <button class="tool" data-tool="rectSelect" title="선택"><svg viewBox="0 0 24 24" stroke-dasharray="3 2"><rect x="4" y="5" width="16" height="14"/></svg></button>
     <button class="tool" data-tool="brush" title="브러시"><svg viewBox="0 0 24 24"><path d="M15 6 18 3l3 3-3 3"/><path d="m14 7-7 7"/><path d="M5 21c2-3 5-2 6-5"/><path d="M3 18c1-1 2-1 3 0"/></svg></button>
     <button class="tool" data-tool="gradient" title="그라디언트"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="8" fill="url(#gg)" stroke="currentColor"/><defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient></defs></svg></button>
     <button class="tool" data-tool="eraser" title="지우개"><svg viewBox="0 0 24 24"><path d="m7 16 9-9 4 4-9 9H7l-4-4 4-4"/><path d="m14 19 7-7"/></svg></button>
@@ -106,11 +109,25 @@ button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-ro
   </aside>
   <main class="center">
     <div class="options">
-      <label>도구 <b id="toolName">이동</b></label><label>크기 <input id="brushSize" type="range" min="1" max="80" value="20"><span id="sizeVal">20</span></label>
+      <label>도구 <b id="toolName">이동</b></label>
+      <label id="brushSizeWrap">크기 <input id="brushSize" type="range" min="1" max="120" value="20"><span id="sizeVal">20</span></label>
       <label id="hardnessWrap">경도 <input id="brushHardness" type="range" min="0" max="100" value="100"><span id="hardVal">100%</span></label>
-      <label>색 <input id="color" type="color" value="#111111"></label>
-      <label id="selModeWrap" style="display:none">모드 <select id="selMode"><option value="new">새 선택</option><option value="add">추가</option><option value="sub">빼기</option></select></label>
-            <button id="selClear" style="display:none">선택 해제</button><label id="cropRatioWrap" style="display:none">비율 <select id="cropRatio"><option value="free">자유</option><option value="1:1">1 : 1</option><option value="4:3">4 : 3</option><option value="3:4">3 : 4</option><option value="16:9">16 : 9</option><option value="9:16">9 : 16</option><option value="3:2">3 : 2</option><option value="2:3">2 : 3</option></select></label>
+      <label id="colorWrap">색 <input id="color" type="color" value="#111111"></label>
+      <label id="brushTypeWrap" style="display:none">브러시 <select id="brushType">
+        <option value="basic">기본</option><option value="pencil">연필</option><option value="soft">소프트</option><option value="airbrush">에어브러시</option><option value="marker">마커</option><option value="ink">잉크</option><option value="chalk">분필</option>
+      </select></label>
+      <div id="selectionOptions" style="display:none;align-items:center;gap:10px">
+        <label>모양 <select id="selectionShape"><option value="rect">사각형</option><option value="circle">원</option></select></label>
+        <label>선택 <select id="selMode"><option value="new">새로</option><option value="add">추가</option><option value="sub">빼기</option></select></label>
+      </div>
+      <button id="selClear" style="display:none">선택 해제</button>
+      <div id="gradientOptions" style="display:none;align-items:center;gap:10px">
+        <label>그라디언트 <select id="gradientPreset">
+          <option value="custom">사용자 지정</option><option value="mono">검정 → 흰색</option><option value="ocean">파랑 → 청록</option><option value="sunset">주황 → 분홍</option><option value="purple">보라 → 파랑</option><option value="mint">민트 → 하늘</option><option value="night">남색 → 보라</option>
+        </select></label>
+        <label>시작 <input id="gradientStartColor" type="color" value="#111111"></label>
+        <label>끝 <input id="gradientEndColor" type="color" value="#ffffff"></label>
+      </div><label id="cropRatioWrap" style="display:none">비율 <select id="cropRatio"><option value="free">자유</option><option value="1:1">1 : 1</option><option value="4:3">4 : 3</option><option value="3:4">3 : 4</option><option value="16:9">16 : 9</option><option value="9:16">9 : 16</option><option value="3:2">3 : 2</option><option value="2:3">2 : 3</option></select></label>
 <div id="shapeOptions" class="shapeOptions">
 <label>모양 <select id="shapeType"><option value="rect">사각형</option><option value="circle">원</option><option value="triangle">삼각형</option><option value="polygon">다각형</option><option value="star">별</option><option value="line">직선</option></select></label>
 <label id="sidesWrap" style="display:none">각 <input id="shapeSides" type="number" min="3" max="20" value="5" style="width:52px"></label>
@@ -170,7 +187,7 @@ button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-ro
 const $=id=>document.getElementById(id),canvas=$('canvas'),ctx=canvas.getContext('2d',{alpha:true});
 let tool='move',scale=1,painting=false,lastX=0,lastY=0,layers=[],active=0,undoStack=[],redoStack=[],img=null;
 let shapeStart=null,shapeSnapshot=null,textPoint=null;const overlay=$('overlay'),octx=overlay.getContext('2d');
-let lineStart=null,gradStart=null,selecting=null,selStart=null,lassoPts=[],selection=null,selMaskBase=null;
+let lineStart=null,gradStart=null,selecting=null,selStart=null,lassoPts=[],selection=null,selMaskBase=null,selectionRegions=[],paintingPointerId=null;
 
 const STORAGE_KEY='photolite-state-v3';
 function persist(){
@@ -191,11 +208,16 @@ function makeLayer(name='레이어'){
   return {name,canvas:c,visible:true,opacity:1,locked:false,blendMode:'source-over',shape:null,text:null,line:null};
 }
 function current(){return layers[active]}
-function setTool(t){tool=t;document.querySelectorAll('.tool[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));const n={move:'이동',brush:'브러시',eraser:'지우개',text:'문자',shape:'도형',fill:'페인트통',crop:'자르기',hand:'손',eyedropper:'스포이드',rectSelect:'사각 선택',gradient:'그라디언트'};$('toolName').textContent=n[t]||t;
+function setTool(t){tool=t;document.querySelectorAll('.tool[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));const n={move:'이동',brush:'브러시',eraser:'지우개',text:'문자',shape:'도형',fill:'페인트통',crop:'자르기',hand:'손',eyedropper:'스포이드',rectSelect:'선택',gradient:'그라디언트'};$('toolName').textContent=n[t]||t;
+  const paint=t==='brush'||t==='eraser';
   $('shapeOptions').classList.toggle('show',t==='shape');
-  $('hardnessWrap').style.display=(t==='brush'||t==='eraser')?'':'none';
-  $('selModeWrap').style.display=t==='rectSelect'?'':'none';
+  $('hardnessWrap').style.display=paint?'':'none';
+  $('brushSizeWrap').style.display=paint?'':'none';
+  $('colorWrap').style.display=paint||(t==='eyedropper'||t==='fill')?'':'none';
+  $('brushTypeWrap').style.display=t==='brush'?'':'none';
+  $('selectionOptions').classList.toggle('show',t==='rectSelect');
   $('selClear').style.display=t==='rectSelect'?'':'none';
+  $('gradientOptions').classList.toggle('show',t==='gradient');
   $('cropRatioWrap').style.display=t==='crop'?'':'none';
 }
 document.querySelectorAll('.tool[data-tool]').forEach(b=>{b.dataset.tip=b.dataset.tip||b.title||b.textContent.trim();b.onclick=()=>setTool(b.dataset.tool)});const shapeToolButton=document.querySelector('.tool[data-tool="shape"]');
@@ -207,9 +229,13 @@ shapeToolButton?.addEventListener('contextmenu',e=>{
 });
 $('brushSize').oninput=e=>$('sizeVal').textContent=e.target.value;
 $('brushHardness').oninput=e=>$('hardVal').textContent=e.target.value+'%';
+const gradientPresets={mono:['#111111','#ffffff'],ocean:['#1261a0','#27d3c2'],sunset:['#ff8a00','#ff4f9a'],purple:['#7b2ff7','#2f80ed'],mint:['#38d39f','#78c7ff'],night:['#111a4a','#8a3ffc']};
+$('gradientPreset').onchange=e=>{const v=gradientPresets[e.target.value];if(v){$('gradientStartColor').value=v[0];$('gradientEndColor').value=v[1]}};
+$('gradientStartColor').oninput=()=>{$('gradientPreset').value='custom'};
+$('gradientEndColor').oninput=()=>{$('gradientPreset').value='custom'};
 $('shapeType').onchange=e=>$('sidesWrap').style.display=(e.target.value==='polygon'||e.target.value==='star')?'':'none';
 $('cropRatio').onchange=()=>{if(cropRect&&cropDrag)cropRect=updateCropRect(cropDrag,cropDrag);};
-$('selClear').onclick=()=>{selection=null;octx.clearRect(0,0,overlay.width,overlay.height);render()};
+$('selClear').onclick=()=>{selection=null;selectionRegions=[];octx.clearRect(0,0,overlay.width,overlay.height);render()};
 
 let persistTimer;
 function schedulePersist(){clearTimeout(persistTimer);persistTimer=setTimeout(()=>{persist();renderLayers()},300)}
@@ -444,27 +470,36 @@ function applyText(){
  drawTextLayer(n);const index=active+1;layers.splice(index,0,n);active=index;selectedShape=n;$('textModalBack').classList.remove('show');syncLayerControls();render();persist();
 }
 $('textApply').onclick=applyText;$('textCancel').onclick=()=>$('textModalBack').classList.remove('show');$('textModalBack').onclick=e=>{if(e.target===$('textModalBack'))$('textModalBack').classList.remove('show')};
-function makeRectMask(x,y,w,h){const m=document.createElement('canvas');m.width=canvas.width;m.height=canvas.height;const c=m.getContext('2d');c.fillStyle='#fff';c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));return m}
-function drawRectSelectionOutline(){if(!selection||tool!=='rectSelect')return;const d=selection.getContext('2d').getImageData(0,0,selection.width,selection.height).data;let x0=canvas.width,y0=canvas.height,x1=-1,y1=-1;for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++)if(d[(y*canvas.width+x)*4+3]){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}if(x1<0)return;octx.save();octx.strokeStyle='#4b86d1';octx.lineWidth=1.5/scale;octx.setLineDash([6/scale,4/scale]);octx.strokeRect(x0,y0,x1-x0+1,y1-y0+1);octx.restore()}
-function setSelectionMask(mask){selection=mask;octx.clearRect(0,0,overlay.width,overlay.height);drawRectSelectionOutline()}
+function makeSelectionMask(x,y,w,h,shape){const m=document.createElement('canvas');m.width=canvas.width;m.height=canvas.height;const c=m.getContext('2d');c.fillStyle='#fff';x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);if(shape==='circle'){c.beginPath();c.ellipse(x+w/2,y+h/2,Math.abs(w/2),Math.abs(h/2),0,0,Math.PI*2);c.fill()}else c.fillRect(x,y,w,h);return m}
+function selectionRect(start,p){let x=Math.min(start.x,p.x),y=Math.min(start.y,p.y),w=Math.abs(p.x-start.x),h=Math.abs(p.y-start.y);if(window.__selectionShift){const z=Math.min(w,h);w=h=z;if(p.x<start.x)x=start.x-z;if(p.y<start.y)y=start.y-z}return{x,y,w,h}}
+function drawSelectionRegionOutline(r){if(!r)return;const {x,y,w,h,shape}=r;octx.save();octx.strokeStyle='#4b86d1';octx.lineWidth=1.5/scale;octx.setLineDash([6/scale,4/scale]);if(shape==='circle'){octx.beginPath();octx.ellipse(x+w/2,y+h/2,Math.abs(w/2),Math.abs(h/2),0,0,Math.PI*2);octx.stroke()}else octx.strokeRect(x,y,w,h);octx.restore()}
+function drawRectSelectionOutline(){if(!selection||tool!=='rectSelect')return;selectionRegions.forEach(drawSelectionRegionOutline)}
+function combineSelection(mask,mode,region){if(!selection||mode==='new'){selection=mask;selectionRegions=[region];return}const c=selection.getContext('2d');c.save();c.globalCompositeOperation=mode==='sub'?'destination-out':'source-over';c.drawImage(mask,0,0);c.restore();if(mode==='add')selectionRegions.push(region)}
+function setSelectionMask(mask,mode,region){combineSelection(mask,mode,region);octx.clearRect(0,0,overlay.width,overlay.height);drawRectSelectionOutline()}
 function clearSelectionPixels(){if(!selection||!current()||current().locked)return false;checkpoint();const c=current().canvas.getContext('2d');c.save();c.globalCompositeOperation='destination-out';c.drawImage(selection,0,0);c.restore();render();persist();return true}
 canvas.addEventListener('pointerdown',e=>{const p=point(e);if(tool==='move'){if(selectionPointerDown(e))return;const candidate=[...layers].reverse().find(l=>(l.shape||l.text||l.image||l.line)&&hitSelectedForLayer(l,p));if(candidate){selectedShape=candidate;active=layers.indexOf(candidate);renderLayers();renderSelection()}else{selectedShape=null;renderSelection()}return}if(!layers.length)return;
-  if(tool==='rectSelect'){selecting='rect';selStart=p;canvas.setPointerCapture(e.pointerId);return}
+  if(tool==='rectSelect'){selecting='selection';selStart=p;canvas.setPointerCapture(e.pointerId);return}
   if(tool==='gradient'){gradStart=p;canvas.setPointerCapture(e.pointerId);return}
-  if(tool==='brush'||tool==='eraser'){if(current().locked)return;checkpoint();raster(current());selMaskBase=selection?cloneC(current().canvas):null;painting=true;lastX=p.x;lastY=p.y;canvas.setPointerCapture(e.pointerId)}else if(tool==='fill'){window.__fillEvent=e;selMaskBase=selection?cloneC(current().canvas):null;floodFill();clampToSelection(selMaskBase)}else if(tool==='text'){openTextModal(p) }else if(tool==='shape'){if(current().locked)return;if(shapeType()==='line')return;checkpoint();shapeSnapshot=snapshot();shapeStart=p;canvas.setPointerCapture(e.pointerId)}else if(tool==='eyedropper'){const d=ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data;$('color').value='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('')}});
+  if(tool==='brush'||tool==='eraser'){if(e.button!==0||current().locked)return;checkpoint();raster(current());selMaskBase=selection?cloneC(current().canvas):null;painting=true;paintingPointerId=e.pointerId;lastX=p.x;lastY=p.y;brushStroke(current().canvas.getContext('2d'),p.x,p.y,p.x,p.y);render();canvas.setPointerCapture(e.pointerId)}else if(tool==='fill'){window.__fillEvent=e;selMaskBase=selection?cloneC(current().canvas):null;floodFill();clampToSelection(selMaskBase)}else if(tool==='text'){openTextModal(p) }else if(tool==='shape'){if(current().locked)return;if(shapeType()==='line')return;checkpoint();shapeSnapshot=snapshot();shapeStart=p;canvas.setPointerCapture(e.pointerId)}else if(tool==='eyedropper'){const d=ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data;$('color').value='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('')}});
 function brushStroke(c,x0,y0,x1,y1){
-  const size=+$('brushSize').value,hardness=(+$('brushHardness').value||100)/100,color=$('color').value,alpha=(+$('opacity').value||100)/100;
-  c.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';
-  if(hardness>=0.98||tool==='eraser'){c.strokeStyle=color;c.lineWidth=size;c.lineCap='round';c.lineJoin='round';c.globalAlpha=alpha;c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();}
-  else{
-    // soft brush: stamp radial-gradient dabs along the segment for a feathered edge
-    const dist=Math.hypot(x1-x0,y1-y0),steps=Math.max(1,Math.ceil(dist/Math.max(1,size*0.18))),r=size/2;
-    c.globalAlpha=1;
-    for(let i=0;i<=steps;i++){
-      const t=i/steps,x=x0+(x1-x0)*t,y=y0+(y1-y0)*t,g=c.createRadialGradient(x,y,0,x,y,r);
-      const innerStop=Math.max(0,hardness*0.9);
-      g.addColorStop(0,hexA(color,alpha));g.addColorStop(innerStop,hexA(color,alpha));g.addColorStop(1,hexA(color,0));
-      c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();
+  const size=+$('brushSize').value,hardness=(+$('brushHardness').value||100)/100,color=$('color').value,alpha=(+$('opacity').value||100)/100,type=$('brushType')?.value||'basic';
+  const dist=Math.hypot(x1-x0,y1-y0);
+  if(type==='pencil'){
+    c.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';c.globalAlpha=Math.min(1,alpha*1.15);c.strokeStyle=color;c.lineWidth=Math.max(1,size*.55);c.lineCap='butt';c.lineJoin='miter';c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();
+  }else if(type==='ink'){
+    c.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';c.globalAlpha=alpha;c.strokeStyle=color;c.lineWidth=Math.max(1,size*(.65+Math.min(1,dist/12)*.35));c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();
+  }else if(type==='marker'){
+    c.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';c.globalAlpha=alpha*.45;c.strokeStyle=color;c.lineWidth=size*1.35;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();
+  }else if(type==='chalk'){
+    c.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';c.globalAlpha=alpha*.55;c.fillStyle=color;const steps=Math.max(1,Math.ceil(dist/Math.max(2,size*.3)));for(let i=0;i<=steps;i++){const t=i/steps,x=x0+(x1-x0)*t,y=y0+(y1-y0)*t;for(let j=0;j<5;j++){const a=Math.random()*Math.PI*2,r=Math.random()*size*.45;c.beginPath();c.arc(x+Math.cos(a)*r,y+Math.sin(a)*r,Math.max(.6,size*.16),0,Math.PI*2);c.fill()}}
+  }else{
+    const soft=type==='soft'||type==='airbrush'||hardness<.98;
+    if(!soft){
+      c.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';c.strokeStyle=color;c.lineWidth=size;c.lineCap='round';c.lineJoin='round';c.globalAlpha=alpha;c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();
+    }else{
+      const strength=type==='airbrush'?.18:.75,r=size/2,steps=Math.max(1,Math.ceil(dist/Math.max(1,size*.18)));
+      c.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';
+      for(let i=0;i<=steps;i++){const t=i/steps,x=x0+(x1-x0)*t,y=y0+(y1-y0)*t,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,hexA(color,alpha*strength));g.addColorStop(Math.max(.05,hardness*.8),hexA(color,alpha*strength));g.addColorStop(1,hexA(color,0));c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()}
     }
   }
   c.globalCompositeOperation='source-over';c.globalAlpha=1;
@@ -481,24 +516,24 @@ canvas.addEventListener('pointermove',e=>{
   updateCursorPreview(e);
   if(tool==='move'&&dragMode){selectionPointerMove(e);return}
   const p=point(e);
-  if(painting && (e.buttons & 1)){const c=current().canvas.getContext('2d');brushStroke(c,lastX,lastY,p.x,p.y);lastX=p.x;lastY=p.y;render()}
+  if(painting && e.pointerId===paintingPointerId){const c=current().canvas.getContext('2d');brushStroke(c,lastX,lastY,p.x,p.y);lastX=p.x;lastY=p.y;render()}
   else if(shapeStart)previewShape(p);
   else if(lineStart&&tool==='shape'&&shapeType()==='line'){
     octx.clearRect(0,0,overlay.width,overlay.height);
     octx.save();octx.strokeStyle=$('shapeColor').value;octx.lineWidth=+$('strokeWidth').value||1;octx.lineCap=(+$('cornerRadius').value||0)>0?'round':'butt';
     octx.beginPath();octx.moveTo(lineStart.x,lineStart.y);octx.lineTo(p.x,p.y);octx.stroke();octx.restore();
   }
-  else if(gradStart){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.strokeStyle='#4b86d1';octx.lineWidth=2/scale;octx.beginPath();octx.moveTo(gradStart.x,gradStart.y);octx.lineTo(p.x,p.y);octx.stroke();octx.restore()}
-  else if(selecting==='rect'){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.setLineDash([6/scale,4/scale]);octx.strokeStyle='#4b86d1';octx.lineWidth=1.5/scale;octx.strokeRect(Math.min(selStart.x,p.x),Math.min(selStart.y,p.y),Math.abs(p.x-selStart.x),Math.abs(p.y-selStart.y));octx.restore()}
+  else if(gradStart){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.strokeStyle='#4b86d1';octx.lineWidth=2/scale;const gdx=p.x-gradStart.x,gdy=p.y-gradStart.y;if(Math.abs(gdx)>=Math.abs(gdy)){const yy=Math.max(0,Math.min(canvas.height,gradStart.y));octx.beginPath();octx.moveTo(0,yy);octx.lineTo(canvas.width,yy)}else{const xx=Math.max(0,Math.min(canvas.width,gradStart.x));octx.beginPath();octx.moveTo(xx,0);octx.lineTo(xx,canvas.height)}octx.stroke();octx.restore()}
+  else if(selecting==='selection'){octx.clearRect(0,0,overlay.width,overlay.height);const q=selectionRect(selStart,p);drawSelectionRegionOutline({x:q.x,y:q.y,w:q.w,h:q.h,shape:$('selectionShape').value})}
 
 });
 canvas.addEventListener('pointerup',e=>{if(tool==='move'&&dragMode){selectionPointerUp();return}
-  if(selecting==='rect'){const p=point(e);setSelectionMask(makeRectMask(Math.min(selStart.x,p.x),Math.min(selStart.y,p.y),Math.abs(p.x-selStart.x),Math.abs(p.y-selStart.y)));selecting=null;return}
+  if(selecting==='selection'){const p=point(e),q=selectionRect(selStart,p),shape=$('selectionShape').value,mode=$('selMode').value;if(q.w>1&&q.h>1){setSelectionMask(makeSelectionMask(q.x,q.y,q.w,q.h,shape),mode,{x:q.x,y:q.y,w:q.w,h:q.h,shape})}selecting=null;renderSelection();return}
   if(lineStart&&tool==='shape'&&shapeType()==='line'){octx.clearRect(0,0,overlay.width,overlay.height)}
-  if(gradStart){const p=point(e);if(!current()||current().locked){gradStart=null;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();raster(current());const c=current().canvas.getContext('2d'),base=selection?cloneC(current().canvas):null,g=c.createLinearGradient(gradStart.x,gradStart.y,p.x,p.y);g.addColorStop(0,$('color').value);g.addColorStop(1,$('shapeColor')?.value||$('color').value);c.fillStyle=g;c.fillRect(0,0,canvas.width,canvas.height);clampToSelection(base);octx.clearRect(0,0,overlay.width,overlay.height);gradStart=null;render();persist();return}
-  if(painting){painting=false;clampToSelection(selMaskBase);selMaskBase=null;render();persist();return}
+  if(gradStart){const p=point(e);if(!current()||current().locked){gradStart=null;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();raster(current());const gc=current().canvas.getContext('2d'),base=selection?cloneC(current().canvas):null;const dx=p.x-gradStart.x,dy=p.y-gradStart.y;let x0=0,y0=0,x1=canvas.width,y1=canvas.height;if(Math.abs(dx)>=Math.abs(dy)){const y=Math.max(0,Math.min(canvas.height,gradStart.y));x0=0;x1=canvas.width;y0=y1=y}else{const x=Math.max(0,Math.min(canvas.width,gradStart.x));y0=0;y1=canvas.height;x0=x1=x}const g=gc.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,$('gradientStartColor').value);g.addColorStop(1,$('gradientEndColor').value);gc.fillStyle=g;gc.fillRect(0,0,canvas.width,canvas.height);clampToSelection(base);octx.clearRect(0,0,overlay.width,overlay.height);gradStart=null;render();persist();return}
+  if(painting&&e.pointerId===paintingPointerId){const p=point(e);const cc=current().canvas.getContext('2d');brushStroke(cc,lastX,lastY,p.x,p.y);painting=false;paintingPointerId=null;clampToSelection(selMaskBase);selMaskBase=null;render();persist();return}
   if(shapeStart){const p=point(e),q=constrainedShapeEnd(p);octx.clearRect(0,0,overlay.width,overlay.height);if(Math.abs(q.w)>2&&Math.abs(q.h)>2){const type=shapeType(),n=makeLayer('도형 '+layers.filter(x=>x.shape).length+1);n.shape={type,x:q.x,y:q.y,w:q.w,h:q.h,angle:0,fill:$('fillShape').checked,strokeOn:$('strokeShape').checked,color:$('shapeColor').value,fillColor:$('shapeColor').value,strokeColor:$('shapeColor').value,stroke:+$('strokeWidth').value||0,radius:+$('cornerRadius').value||0,sides:+$('shapeSides').value||5};drawShape(n.canvas.getContext('2d'),type,n.shape.x,n.shape.y,n.shape.w,n.shape.h,0,n.shape);const index=active+1;layers.splice(index,0,n);active=index;selectedShape=n;selectedLayers.clear();selectedLayers.add(index)}else restore(shapeSnapshot);shapeStart=null;shapeSnapshot=null;render();persist()}});
-canvas.addEventListener('pointercancel',()=>{painting=false;if(shapeStart){octx.clearRect(0,0,overlay.width,overlay.height);restore(shapeSnapshot);shapeStart=null;shapeSnapshot=null}});
+canvas.addEventListener('pointercancel',()=>{painting=false;paintingPointerId=null;if(shapeStart){octx.clearRect(0,0,overlay.width,overlay.height);restore(shapeSnapshot);shapeStart=null;shapeSnapshot=null}});
 document.addEventListener('keydown',e=>{const k=e.key.toLowerCase(),mod=e.ctrlKey||e.metaKey,editing=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);if(!mod||editing)return;if(k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if(k==='y'){e.preventDefault();redo()}else if(k==='s'){e.preventDefault();save()}else if(k==='o'){e.preventDefault();openImage()}else if(k==='n'&&e.shiftKey){e.preventDefault();addLayer()}else if(k==='n'){e.preventDefault();newDocument()}});
 
 /* ===== 추가 기능 ===== */
@@ -586,8 +621,8 @@ document.addEventListener('keydown',e=>{
   else if(k==='delete'||k==='backspace'){e.preventDefault();if(selectedLayers.size&&tool==='move')deleteLayer();else if(selection)clearSelectionPixels();else if(selectedShape&&tool==='move')deleteLayer()}
   else if(k.startsWith('arrow')&&selectedShape&&!selectedShape.locked&&tool==='move'){e.preventDefault();const d=e.shiftKey?10:1,m=objectMeta(selectedShape);checkpoint();m.x+=k==='arrowright'?d:k==='arrowleft'?-d:0;m.y+=k==='arrowdown'?d:k==='arrowup'?-d:0;redrawObject(selectedShape);render();persist()}
 });
-document.addEventListener('keydown',e=>{if(e.key==='Shift')window.__shapeShift=true});
-document.addEventListener('keyup',e=>{if(e.key==='Shift')window.__shapeShift=false;if(e.key===' '){spaceDown=false;canvas.style.cursor=tool==='hand'?'grab':''}});
+document.addEventListener('keydown',e=>{if(e.key==='Shift'){window.__shapeShift=true;window.__selectionShift=true}});
+document.addEventListener('keyup',e=>{if(e.key==='Shift'){window.__shapeShift=false;window.__selectionShift=false;}if(e.key===' '){spaceDown=false;canvas.style.cursor=tool==='hand'?'grab':''}});
 setTool('move');if(layers.length&&!selectedLayers.size)selectedLayers.add(active);renderLayers();syncLayerControls();sizeOverlay();loadPersisted();
 </script>
 </body>
