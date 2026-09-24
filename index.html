@@ -228,12 +228,18 @@ function renderLayers(){
     el.innerHTML='<div class="thumb"></div><span></span><button class="lock" title="레이어 잠금">'+(l.locked?'🔒':'🔓')+'</button><button class="eye" title="표시/숨기기">'+(l.visible?'◉':'○')+'</button>';
     el.onclick=e=>{
       if(e.target.closest('.lock,.eye'))return;
-      const additive=e.shiftKey||e.ctrlKey||e.metaKey;
-      if(additive){
+      if(e.shiftKey){
+        const anchor=layerSelectAnchor??active;
+        const lo=Math.min(anchor,i),hi=Math.max(anchor,i);
+        selectedLayers.clear();
+        for(let j=lo;j<=hi;j++) selectedLayers.add(j);
+        active=i;
+      }else if(e.ctrlKey||e.metaKey){
         if(selectedLayers.has(i)) selectedLayers.delete(i); else selectedLayers.add(i);
         active=i;
+        layerSelectAnchor=i;
       }else{
-        selectedLayers.clear(); selectedLayers.add(i); active=i;
+        selectedLayers.clear(); selectedLayers.add(i); active=i; layerSelectAnchor=i;
       }
       selectedShape=selectedLayers.size===1 ? ((l.shape||l.text||l.image||l.line)?l:null) : null;
       syncLayerControls();renderLayers();renderSelection();
@@ -330,6 +336,7 @@ $('blendMode').onchange=e=>{if(current()&&!current().locked){checkpoint();curren
 ['textPanelSize','textPanelColor','textPanelAlign','textPanelLine','textPanelContent','textPanelBold','textPanelItalic'].forEach(id=>$(id).addEventListener('input',updateSelectedText));
  
 
+function clampToSelection(base){if(!base||!selection||!current())return;const c=current().canvas.getContext('2d');const w=canvas.width,h=canvas.height;const original=base.getContext('2d').getImageData(0,0,w,h),edited=c.getImageData(0,0,w,h),mask=selection.getContext('2d').getImageData(0,0,w,h);for(let i=0;i<mask.data.length;i+=4){if(mask.data[i+3]===0){edited.data[i]=original.data[i];edited.data[i+1]=original.data[i+1];edited.data[i+2]=original.data[i+2];edited.data[i+3]=original.data[i+3]}}c.putImageData(edited,0,0)}
 function floodFill(){
   if(!layers.length||current().locked)return;
   checkpoint();
@@ -420,8 +427,8 @@ function drawLineLayer(l){
   c.globalAlpha=t.opacity??1;
   c.strokeStyle=t.color||'#111111';
   c.lineWidth=Math.max(1,t.width||1);
-  c.lineCap='round';
-  c.lineJoin='round';
+  c.lineCap=(t.radius??0)>0?'round':'butt';
+  c.lineJoin=(t.radius??0)>0?'round':'miter';
   c.beginPath();c.moveTo(t.x1,t.y1);c.lineTo(t.x2,t.y2);c.stroke();
   c.restore();
 }
@@ -469,7 +476,7 @@ function updateCursorPreview(e){
   const size=+$('brushSize').value*scale;cp.style.display='block';cp.style.width=size+'px';cp.style.height=size+'px';cp.style.left=e.clientX+'px';cp.style.top=e.clientY+'px';
 }
 canvas.addEventListener('pointerleave',()=>$('cursorPreview').style.display='none');
-canvas.addEventListener('click',e=>{if(tool!=='shape'||shapeType()!=='line')return;const p=point(e);if(!lineStart){lineStart=p;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();const n=makeLayer('직선 '+(layers.filter(x=>x.line).length+1));n.line={x1:lineStart.x,y1:lineStart.y,x2:p.x,y2:p.y,color:$('shapeColor').value,width:+$('strokeWidth').value||1,opacity:(+$('opacity').value||100)/100};layers.splice(active+1,0,n);active++;selectedShape=n;selectedLayers.clear();selectedLayers.add(active);lineStart=null;octx.clearRect(0,0,overlay.width,overlay.height);drawLineLayer(n);renderLayers();render();persist()});
+canvas.addEventListener('click',e=>{if(tool!=='shape'||shapeType()!=='line')return;const p=point(e);if(!lineStart){lineStart=p;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();const n=makeLayer('직선 '+(layers.filter(x=>x.line).length+1));n.line={x1:lineStart.x,y1:lineStart.y,x2:p.x,y2:p.y,color:$('shapeColor').value,width:+$('strokeWidth').value||1,radius:+$('cornerRadius').value||0,opacity:(+$('opacity').value||100)/100};layers.splice(active+1,0,n);active++;selectedShape=n;selectedLayers.clear();selectedLayers.add(active);lineStart=null;octx.clearRect(0,0,overlay.width,overlay.height);drawLineLayer(n);renderLayers();render();persist()});
 canvas.addEventListener('pointermove',e=>{
   updateCursorPreview(e);
   if(tool==='move'&&dragMode){selectionPointerMove(e);return}
@@ -478,7 +485,7 @@ canvas.addEventListener('pointermove',e=>{
   else if(shapeStart)previewShape(p);
   else if(lineStart&&tool==='shape'&&shapeType()==='line'){
     octx.clearRect(0,0,overlay.width,overlay.height);
-    octx.save();octx.strokeStyle=$('color').value;octx.lineWidth=+$('brushSize').value;octx.lineCap='round';
+    octx.save();octx.strokeStyle=$('shapeColor').value;octx.lineWidth=+$('strokeWidth').value||1;octx.lineCap=(+$('cornerRadius').value||0)>0?'round':'butt';
     octx.beginPath();octx.moveTo(lineStart.x,lineStart.y);octx.lineTo(p.x,p.y);octx.stroke();octx.restore();
   }
   else if(gradStart){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.strokeStyle='#4b86d1';octx.lineWidth=2/scale;octx.beginPath();octx.moveTo(gradStart.x,gradStart.y);octx.lineTo(p.x,p.y);octx.stroke();octx.restore()}
@@ -488,7 +495,7 @@ canvas.addEventListener('pointermove',e=>{
 canvas.addEventListener('pointerup',e=>{if(tool==='move'&&dragMode){selectionPointerUp();return}
   if(selecting==='rect'){const p=point(e);setSelectionMask(makeRectMask(Math.min(selStart.x,p.x),Math.min(selStart.y,p.y),Math.abs(p.x-selStart.x),Math.abs(p.y-selStart.y)));selecting=null;return}
   if(lineStart&&tool==='shape'&&shapeType()==='line'){octx.clearRect(0,0,overlay.width,overlay.height)}
-  if(gradStart){const p=point(e);if(!current()||current().locked){gradStart=null;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();raster(current());const c=current().canvas.getContext('2d'),base=selection?cloneC(current().canvas):null,g=c.createLinearGradient(gradStart.x,gradStart.y,p.x,p.y);g.addColorStop(0,$('shapeColor')?.value||$('color').value);g.addColorStop(1,$('color').value);c.fillStyle=g;c.fillRect(0,0,canvas.width,canvas.height);clampToSelection(base);octx.clearRect(0,0,overlay.width,overlay.height);gradStart=null;render();persist();return}
+  if(gradStart){const p=point(e);if(!current()||current().locked){gradStart=null;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();raster(current());const c=current().canvas.getContext('2d'),base=selection?cloneC(current().canvas):null,g=c.createLinearGradient(gradStart.x,gradStart.y,p.x,p.y);g.addColorStop(0,$('color').value);g.addColorStop(1,$('shapeColor')?.value||$('color').value);c.fillStyle=g;c.fillRect(0,0,canvas.width,canvas.height);clampToSelection(base);octx.clearRect(0,0,overlay.width,overlay.height);gradStart=null;render();persist();return}
   if(painting){painting=false;clampToSelection(selMaskBase);selMaskBase=null;render();persist();return}
   if(shapeStart){const p=point(e),q=constrainedShapeEnd(p);octx.clearRect(0,0,overlay.width,overlay.height);if(Math.abs(q.w)>2&&Math.abs(q.h)>2){const type=shapeType(),n=makeLayer('도형 '+layers.filter(x=>x.shape).length+1);n.shape={type,x:q.x,y:q.y,w:q.w,h:q.h,angle:0,fill:$('fillShape').checked,strokeOn:$('strokeShape').checked,color:$('shapeColor').value,fillColor:$('shapeColor').value,strokeColor:$('shapeColor').value,stroke:+$('strokeWidth').value||0,radius:+$('cornerRadius').value||0,sides:+$('shapeSides').value||5};drawShape(n.canvas.getContext('2d'),type,n.shape.x,n.shape.y,n.shape.w,n.shape.h,0,n.shape);const index=active+1;layers.splice(index,0,n);active=index;selectedShape=n;selectedLayers.clear();selectedLayers.add(index)}else restore(shapeSnapshot);shapeStart=null;shapeSnapshot=null;render();persist()}});
 canvas.addEventListener('pointercancel',()=>{painting=false;if(shapeStart){octx.clearRect(0,0,overlay.width,overlay.height);restore(shapeSnapshot);shapeStart=null;shapeSnapshot=null}});
@@ -525,7 +532,7 @@ $('adjCancel').onclick=()=>{adjDraw('none');undoStack.pop();$('adjBack').classLi
 $('adjOk').onclick=()=>{raster(current());$('adjBack').classList.remove('show');render();persist()};
 /* 확대/이동/자르기 */
 let cropRect=null,cropDrag=null,panning=null,spaceDown=false;
-const selectedLayers=new Set();
+const selectedLayers=new Set();let layerSelectAnchor=null;
 function cropAspect(){
   const v=$('cropRatio').value;if(v==='free')return null;
   const [a,b]=v.split(':').map(Number);return a/b;
