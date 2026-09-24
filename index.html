@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>PhotoLite</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font-family:Arial,Pretendard,sans-serif;background:#1f1f1f;color:#eee;overflow:hidden}
+button,input,select{font:inherit}
+.app{height:100vh;display:grid;grid-template-rows:42px 1fr 28px}
+.topbar{background:#202020;border-bottom:1px solid #111;display:flex;align-items:center;padding:0 10px;gap:12px;font-size:13px}
+.brand{font-weight:700}.menu{display:flex;gap:12px;color:#d6d6d6}.menu span{cursor:pointer}
+.workspace{min-height:0;display:grid;grid-template-columns:54px minmax(0,1fr) 280px}
+.toolbar{background:#252525;border-right:1px solid #111;padding:7px 5px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.tool{width:42px;height:42px;border:0;border-radius:4px;background:transparent;color:#ddd;cursor:pointer;font-size:18px}
+.tool:hover,.tool.active{background:#3a3a3a}.separator{height:1px;background:#444;width:36px;margin:4px 0}
+.center{min-width:0;min-height:0;background:#303030;display:grid;grid-template-rows:38px 1fr;position:relative}
+.options{background:#292929;border-bottom:1px solid #171717;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:12px}
+.options label{display:flex;align-items:center;gap:6px}.options input[type=range]{width:100px}
+.canvasWrap{overflow:auto;position:relative;padding:24px;background:#333;display:flex;align-items:flex-start;justify-content:center}
+#canvas{background:#fff;box-shadow:0 8px 30px #111;touch-action:none;cursor:crosshair}
+.side{background:#252525;border-left:1px solid #111;display:flex;flex-direction:column;min-width:0}
+.panel{border-bottom:1px solid #111}.panel h3{margin:0;padding:10px 12px;font-size:12px;background:#2d2d2d}
+.panelBody{padding:10px 12px}.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;font-size:12px}
+.row input[type=range]{width:135px}.row input[type=color]{width:58px;height:28px;padding:0;border:0}
+.layer{display:flex;align-items:center;gap:8px;background:#313131;padding:8px;font-size:12px}.layer .thumb{width:26px;height:26px;background:#fff;border-radius:2px}.layer.active{outline:1px solid #5b84c4}
+.status{background:#202020;border-top:1px solid #111;display:flex;align-items:center;padding:0 10px;color:#aaa;font-size:11px;gap:16px}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#888;font-size:15px;pointer-events:none}
+.fileBtn{position:relative;overflow:hidden}.fileBtn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+@media(max-width:900px){.workspace{grid-template-columns:48px minmax(0,1fr)}.side{display:none}.options{overflow:auto}.canvasWrap{padding:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">PhotoLite</div>
+    <div class="menu"><span>파일</span><span>편집</span><span>이미지</span><span>레이어</span><span>필터</span><span>보기</span></div>
+  </div>
+  <div class="workspace">
+    <div class="toolbar">
+      <button class="tool active" data-tool="move" title="이동">↔</button>
+      <button class="tool" data-tool="brush" title="브러시">✎</button>
+      <button class="tool" data-tool="eraser" title="지우개">⌫</button>
+      <button class="tool" data-tool="text" title="문자">T</button>
+      <button class="tool" data-tool="rect" title="사각형">□</button>
+      <button class="tool" data-tool="circle" title="원">○</button>
+      <button class="tool" data-tool="eyedropper" title="스포이드">⌖</button>
+      <div class="separator"></div>
+      <label class="tool fileBtn" title="이미지 열기">▣<input id="open" type="file" accept="image/*"></label>
+      <button class="tool" id="fit" title="화면에 맞춤">⌗</button>
+    </div>
+    <div class="center">
+      <div class="options">
+        <label>도구 <b id="toolName">이동</b></label>
+        <label>크기 <input id="brushSize" type="range" min="1" max="80" value="20"><span id="sizeVal">20</span></label>
+        <label>색 <input id="color" type="color" value="#111111"></label>
+        <button id="clear">전체 지우기</button>
+      </div>
+      <div class="canvasWrap" id="wrap">
+        <div class="empty" id="empty">이미지를 열어 주세요</div>
+        <canvas id="canvas" width="900" height="650"></canvas>
+      </div>
+    </div>
+    <aside class="side">
+      <section class="panel">
+        <h3>레이어</h3>
+        <div class="panelBody">
+          <div class="layer active"><div class="thumb"></div><span>Background</span></div>
+          <button id="newLayer" style="margin-top:8px;width:100%">+ 새 레이어</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h3>도구 옵션</h3>
+        <div class="panelBody">
+          <div class="row"><span>불투명도</span><span id="opacityVal">100%</span></div>
+          <input id="opacity" type="range" min="1" max="100" value="100" style="width:100%">
+        </div>
+      </section>
+      <section class="panel">
+        <h3>내보내기</h3>
+        <div class="panelBody">
+          <button id="download" style="width:100%">PNG 저장</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+  <div class="status"><span id="docStatus">새 문서</span><span id="zoom">100%</span><span>PhotoLite — 간소화된 포토샵</span></div>
+</div>
+<script>
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+let tool='move',img=null,scale=1,painting=false,lastX=0,lastY=0;
+
+function setTool(t){
+  tool=t;
+  document.querySelectorAll('.tool[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));
+  const names={move:'이동',brush:'브러시',eraser:'지우개',text:'문자',rect:'사각형',circle:'원',eyedropper:'스포이드'};
+  $('toolName').textContent=names[t]||t;
+}
+document.querySelectorAll('.tool[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+$('brushSize').oninput=e=>$('sizeVal').textContent=e.target.value;
+
+function canvasPoint(e){
+  const r=canvas.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};
+}
+function fit(){
+  if(!img)return;
+  const wrap=$('wrap'), pad=48;
+  scale=Math.min((wrap.clientWidth-pad)/img.width,(wrap.clientHeight-pad)/img.height,1);
+  canvas.style.width=(img.width*scale)+'px';
+  canvas.style.height=(img.height*scale)+'px';
+  $('zoom').textContent=Math.round(scale*100)+'%';
+}
+function resetCanvas(w,h){
+  canvas.width=w;canvas.height=h;ctx.clearRect(0,0,w,h);
+}
+$('open').addEventListener('change',e=>{
+  const f=e.target.files?.[0];if(!f)return;
+  const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{img=im;resetCanvas(im.width,im.height);ctx.drawImage(im,0,0);$('empty').style.display='none';$('docStatus').textContent=im.width+' × '+im.height;fit();URL.revokeObjectURL(u)};
+  im.onerror=()=>{URL.revokeObjectURL(u);alert('이미지를 불러오지 못했습니다.')};
+  im.src=u;
+});
+canvas.addEventListener('pointerdown',e=>{
+  const p=canvasPoint(e);
+  if(tool==='brush'||tool==='eraser'){
+    painting=true;lastX=p.x;lastY=p.y;canvas.setPointerCapture(e.pointerId);
+  }else if(tool==='text'){
+    const txt=prompt('문자를 입력하세요');
+    if(txt){ctx.fillStyle=$('color').value;ctx.font='32px Arial';ctx.fillText(txt.slice(0,1),p.x,p.y)}
+  }else if(tool==='rect'){
+    ctx.strokeStyle=$('color').value;ctx.lineWidth=+$('brushSize').value;ctx.strokeRect(p.x-40,p.y-30,80,60);
+  }else if(tool==='circle'){
+    ctx.strokeStyle=$('color').value;ctx.lineWidth=+$('brushSize').value;ctx.beginPath();ctx.arc(p.x,p.y,35,0,Math.PI*2);ctx.stroke();
+  }else if(tool==='eyedropper'){
+    const d=ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data;
+    const hex='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+    $('color').value=hex;
+  }
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!painting)return;const p=canvasPoint(e);
+  const size=+$('brushSize').value;
+  ctx.strokeStyle=$('color').value;ctx.lineWidth=size;ctx.lineCap='round';
+  if(tool==='eraser'){ctx.globalCompositeOperation='destination-out'}else{ctx.globalCompositeOperation='source-over'}
+  ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.globalCompositeOperation='source-over';
+  lastX=p.x;lastY=p.y;
+});
+canvas.addEventListener('pointerup',()=>painting=false);
+canvas.addEventListener('pointercancel',()=>painting=false);
+$('fit').onclick=fit;
+$('clear').onclick=()=>{if(confirm('현재 캔버스를 모두 지울까요?')){ctx.clearRect(0,0,canvas.width,canvas.height)}};
+$('opacity').oninput=e=>$('opacityVal').textContent=e.target.value+'%';
+$('download').onclick=()=>canvas.toBlob(b=>{const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='photolite.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png');
+$('newLayer').onclick=()=>alert('간소화 버전에서는 새 레이어 UI만 제공됩니다. 다음 단계에서 실제 레이어 합성을 추가할 수 있습니다.');
+window.addEventListener('resize',fit);
+</script>
+</body>
+</html>
