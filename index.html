@@ -180,7 +180,7 @@ const STORAGE_KEY='photolite-state-v3';
 function persist(){
   if(!canvas.width||!canvas.height||!layers.length)return;
   try{
-    const state={width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode||'source-over',shape:l.shape?{...l.shape}:null,text:l.text?{...l.text}:null,data:l.canvas.toDataURL('image/png')}))};
+    const state={width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode||'source-over',shape:l.shape?{...l.shape}:null,text:l.text?{...l.text}:null,line:l.line?{...l.line}:null,data:l.canvas.toDataURL('image/png')}))};
     localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
   }catch(e){console.warn('저장 공간이 부족합니다.',e)}
 }
@@ -240,7 +240,7 @@ function renderLayers(){
       }else{
         selectedLayers.clear(); selectedLayers.add(i); active=i;
       }
-      selectedShape=selectedLayers.size===1 ? ((l.shape||l.text||l.image)?l:null) : null;
+      selectedShape=selectedLayers.size===1 ? ((l.shape||l.text||l.image||l.line)?l:null) : null;
       syncLayerControls();renderLayers();renderSelection();
     };
     el.querySelector('span').textContent=l.name;
@@ -255,7 +255,7 @@ function fit(){if(!canvas.width)return;const wrap=$('wrap'),pad=48;scale=Math.mi
 function setZoom(z){scale=z;canvas.style.width=canvas.width*z+'px';canvas.style.height=canvas.height*z+'px';sizeOverlay();$('zoom').textContent=Math.round(z*100)+'%'}
 function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
 function snapshot(){return {width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode||'source-over',shape:l.shape?{...l.shape}:null,text:l.text?{...l.text}:null,data:l.canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height)}))}}
-function restore(s){canvas.width=s.width;canvas.height=s.height;layers=s.layers.map(x=>{const l=makeLayer(x.name);l.visible=x.visible;l.opacity=x.opacity;l.locked=!!x.locked;l.blendMode=x.blendMode||'source-over';l.shape=x.shape?{...x.shape}:null;l.text=x.text?{...x.text}:null;l.canvas.getContext('2d').putImageData(x.data,0,0);return l});active=Math.min(s.active,Math.max(0,layers.length-1));render();fit()}
+function restore(s){canvas.width=s.width;canvas.height=s.height;layers=s.layers.map(x=>{const l=makeLayer(x.name);l.visible=x.visible;l.opacity=x.opacity;l.locked=!!x.locked;l.blendMode=x.blendMode||'source-over';l.shape=x.shape?{...x.shape}:null;l.text=x.text?{...x.text}:null;l.line=x.line?{...x.line}:null;l.canvas.getContext('2d').putImageData(x.data,0,0);return l});active=Math.min(s.active,Math.max(0,layers.length-1));render();fit()}
 function checkpoint(){undoStack.push(snapshot());if(undoStack.length>30)undoStack.shift();redoStack=[]}
 function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restore(undoStack.pop())}
 function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restore(redoStack.pop())}
@@ -410,6 +410,19 @@ function polyPath(c,w,h,sides,star){
  for(let i=0;i<sides*(star?2:1);i++){const a=(i/(sides*(star?2:1)))*Math.PI*2-Math.PI/2,r=star&&i%2?0.45:1,px=cx+Math.cos(a)*rx*r,py=cy+Math.sin(a)*ry*r;i===0?c.moveTo(px,py):c.lineTo(px,py)}
  c.closePath();
 }
+function drawLineLayer(l){
+  if(!l?.line)return;
+  const t=l.line,c=l.canvas.getContext('2d');
+  c.clearRect(0,0,canvas.width,canvas.height);
+  c.save();
+  c.globalAlpha=t.opacity??1;
+  c.strokeStyle=t.color||'#111111';
+  c.lineWidth=Math.max(1,t.width||1);
+  c.lineCap='round';
+  c.lineJoin='round';
+  c.beginPath();c.moveTo(t.x1,t.y1);c.lineTo(t.x2,t.y2);c.stroke();
+  c.restore();
+}
 function drawShape(c,type,x,y,w,h,angle=0,opts={}){
  const fill=opts.fill ?? $('fillShape').checked,stroke=Math.max(0,(opts.stroke ?? (+$('strokeWidth').value || 0))),fillColor=opts.fillColor ?? $('fillColor').value,strokeColor=opts.strokeColor ?? $('strokeColor').value,radius=opts.radius ?? (+$('cornerRadius').value || 0),sides=opts.sides ?? (+$('shapeSides').value||5);
  c.save();c.translate(x+w/2,y+h/2);c.rotate(angle);c.translate(-w/2,-h/2);c.lineWidth=stroke;c.strokeStyle=strokeColor;c.fillStyle=fillColor;
@@ -429,11 +442,21 @@ function applyText(){
  drawTextLayer(n);const index=active+1;layers.splice(index,0,n);active=index;selectedShape=n;$('textModalBack').classList.remove('show');syncLayerControls();render();persist();
 }
 $('textApply').onclick=applyText;$('textCancel').onclick=()=>$('textModalBack').classList.remove('show');$('textModalBack').onclick=e=>{if(e.target===$('textModalBack'))$('textModalBack').classList.remove('show')};
-canvas.addEventListener('pointerdown',e=>{const p=point(e);if(tool==='move'){if(selectionPointerDown(e))return;const candidate=[...layers].reverse().find(l=>(l.shape||l.text||l.image)&&hitSelectedForLayer(l,p));if(candidate){selectedShape=candidate;active=layers.indexOf(candidate);renderLayers();renderSelection()}else{selectedShape=null;renderSelection()}return}if(!layers.length)return;
+canvas.addEventListener('pointerdown',e=>{const p=point(e);if(tool==='move'){if(selectionPointerDown(e))return;const candidate=[...layers].reverse().find(l=>(l.shape||l.text||l.image||l.line)&&hitSelectedForLayer(l,p));if(candidate){selectedShape=candidate;active=layers.indexOf(candidate);renderLayers();renderSelection()}else{selectedShape=null;renderSelection()}return}if(!layers.length)return;
   if(tool==='rectSelect'){selecting='rect';selStart=p;canvas.setPointerCapture(e.pointerId);return}
   if(tool==='lasso'){selecting='lasso';lassoPts=[p];canvas.setPointerCapture(e.pointerId);return}
   if(tool==='wand'){applyWandSelection(p);return}
-  if(tool==='line'){lineStart=p;canvas.setPointerCapture(e.pointerId);return}
+  if(tool==='line'){
+    lineStart=p;
+    const lineLayer=makeLayer('직선 '+(layers.filter(x=>x.line).length+1));
+    lineLayer.line={x1:p.x,y1:p.y,x2:p.x,y2:p.y,color:$('color').value,width:+$('brushSize').value||1,opacity:(+$('opacity').value||100)/100};
+    layers.splice(active+1,0,lineLayer);active++;
+    selectedShape=lineLayer;
+    drawLineLayer(lineLayer);
+    renderLayers();render();persist();
+    canvas.setPointerCapture(e.pointerId);
+    return
+  }
   if(tool==='gradient'){gradStart=p;canvas.setPointerCapture(e.pointerId);return}
   if(tool==='brush'||tool==='eraser'){if(current().locked)return;checkpoint();raster(current());selMaskBase=selection?cloneC(current().canvas):null;painting=true;lastX=p.x;lastY=p.y;canvas.setPointerCapture(e.pointerId)}else if(tool==='fill'){window.__fillEvent=e;selMaskBase=selection?cloneC(current().canvas):null;floodFill();clampToSelection(selMaskBase)}else if(tool==='text'){openTextModal(p)}else if(tool==='shape'){if(current().locked)return;checkpoint();shapeSnapshot=snapshot();shapeStart=p;canvas.setPointerCapture(e.pointerId)}else if(tool==='eyedropper'){const d=ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data;$('color').value='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('')}});
 function brushStroke(c,x0,y0,x1,y1){
@@ -466,7 +489,10 @@ canvas.addEventListener('pointermove',e=>{
   const p=point(e);
   if(painting && (e.buttons & 1)){const c=current().canvas.getContext('2d');brushStroke(c,lastX,lastY,p.x,p.y);lastX=p.x;lastY=p.y;render()}
   else if(shapeStart)previewShape(p);
-  else if(lineStart){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.strokeStyle=$('color').value;octx.lineWidth=+$('brushSize').value;octx.lineCap='round';octx.beginPath();octx.moveTo(lineStart.x,lineStart.y);octx.lineTo(p.x,p.y);octx.stroke();octx.restore()}
+  else if(lineStart){
+    const liveLine=layers[active];
+    if(liveLine?.line){liveLine.line.x2=p.x;liveLine.line.y2=p.y;drawLineLayer(liveLine);render()}
+  }
   else if(gradStart){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.strokeStyle='#4b86d1';octx.lineWidth=2/scale;octx.beginPath();octx.moveTo(gradStart.x,gradStart.y);octx.lineTo(p.x,p.y);octx.stroke();octx.restore()}
   else if(selecting==='rect'){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.setLineDash([6/scale,4/scale]);octx.strokeStyle='#4b86d1';octx.lineWidth=1.5/scale;octx.strokeRect(Math.min(selStart.x,p.x),Math.min(selStart.y,p.y),Math.abs(p.x-selStart.x),Math.abs(p.y-selStart.y));octx.restore()}
   else if(selecting==='lasso'){lassoPts.push(p);octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.setLineDash([6/scale,4/scale]);octx.strokeStyle='#4b86d1';octx.lineWidth=1.5/scale;octx.beginPath();lassoPts.forEach((q,i)=>i===0?octx.moveTo(q.x,q.y):octx.lineTo(q.x,q.y));octx.stroke();octx.restore()}
@@ -474,7 +500,14 @@ canvas.addEventListener('pointermove',e=>{
 canvas.addEventListener('pointerup',e=>{if(tool==='move'&&dragMode){selectionPointerUp();return}
   if(selecting==='rect'){const p=point(e);setSelectionMask(makeRectMask(Math.min(selStart.x,p.x),Math.min(selStart.y,p.y),Math.abs(p.x-selStart.x),Math.abs(p.y-selStart.y)));selecting=null;return}
   if(selecting==='lasso'){setSelectionMask(makeLassoMask(lassoPts));selecting=null;lassoPts=[];return}
-  if(lineStart){const p=point(e);if(!current()||current().locked){lineStart=null;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();raster(current());const c=current().canvas.getContext('2d'),base=selection?cloneC(current().canvas):null;c.save();c.strokeStyle=$('color').value;c.lineWidth=+$('brushSize').value;c.lineCap='round';c.beginPath();c.moveTo(lineStart.x,lineStart.y);c.lineTo(p.x,p.y);c.stroke();c.restore();clampToSelection(base);octx.clearRect(0,0,overlay.width,overlay.height);lineStart=null;render();persist();return}
+  if(lineStart){
+    const p=point(e),liveLine=layers[active];
+    if(liveLine?.line){liveLine.line.x2=p.x;liveLine.line.y2=p.y;drawLineLayer(liveLine)}
+    lineStart=null;
+    canvas.releasePointerCapture?.(e.pointerId);
+    renderLayers();render();persist();
+    return
+  }
   if(gradStart){const p=point(e);if(!current()||current().locked){gradStart=null;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();raster(current());const c=current().canvas.getContext('2d'),base=selection?cloneC(current().canvas):null,g=c.createLinearGradient(gradStart.x,gradStart.y,p.x,p.y);g.addColorStop(0,$('fillColor')?.value||$('color').value);g.addColorStop(1,$('color').value);c.fillStyle=g;c.fillRect(0,0,canvas.width,canvas.height);clampToSelection(base);octx.clearRect(0,0,overlay.width,overlay.height);gradStart=null;render();persist();return}
   if(painting){painting=false;clampToSelection(selMaskBase);selMaskBase=null;render();persist();return}
   if(shapeStart){const p=point(e),w=p.x-shapeStart.x,h=p.y-shapeStart.y;octx.clearRect(0,0,overlay.width,overlay.height);if(Math.abs(w)>2&&Math.abs(h)>2){const type=shapeType(),n=makeLayer('도형 '+layers.filter(x=>x.shape).length+1);n.shape={type,x:shapeStart.x,y:shapeStart.y,w,h,angle:0,fill:$('fillShape').checked,fillColor:$('fillColor').value,strokeColor:$('strokeColor').value,stroke:+$('strokeWidth').value||0,radius:+$('cornerRadius').value||0,sides:+$('shapeSides').value||5};drawShape(n.canvas.getContext('2d'),type,n.shape.x,n.shape.y,n.shape.w,n.shape.h,0,n.shape);const index=active+1;layers.splice(index,0,n);active=index;selectedShape=n}else restore(shapeSnapshot);shapeStart=null;shapeSnapshot=null;render();persist()}});
