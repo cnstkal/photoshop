@@ -139,7 +139,7 @@ const STORAGE_KEY='photolite-state-v3';
 function persist(){
   if(!canvas.width||!canvas.height||!layers.length)return;
   try{
-    const state={width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,shape:l.shape?{...l.shape}:null,data:l.canvas.toDataURL('image/png')}))};
+    const state={width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode||'source-over',shape:l.shape?{...l.shape}:null,text:l.text?{...l.text}:null,data:l.canvas.toDataURL('image/png')}))};
     localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
   }catch(e){console.warn('저장 공간이 부족합니다.',e)}
 }
@@ -293,7 +293,7 @@ function selectionPointerMove(e){
 }
 function selectionPointerUp(){if(dragMode){dragMode=null;render();persist();syncLayerControls()}}
 function drawShape(c,type,x,y,w,h,angle=0,opts={}){
- const fill=opts.fill??$('fillShape').checked,stroke=Math.max(0,opts.stroke??+$('strokeWidth').value||0),fillColor=opts.fillColor??$('fillColor').value,strokeColor=opts.strokeColor??$('strokeColor').value,radius=opts.radius??+$('cornerRadius').value||0;
+ const fill=opts.fill ?? $('fillShape').checked,stroke=Math.max(0,(opts.stroke ?? (+$('strokeWidth').value || 0))),fillColor=opts.fillColor ?? $('fillColor').value,strokeColor=opts.strokeColor ?? $('strokeColor').value,radius=opts.radius ?? (+$('cornerRadius').value || 0);
  c.save();c.translate(x+w/2,y+h/2);c.rotate(angle);c.translate(-w/2,-h/2);c.lineWidth=stroke;c.strokeStyle=strokeColor;c.fillStyle=fillColor;
  if(type==='circle'){c.beginPath();c.ellipse(w/2,h/2,Math.abs(w/2),Math.abs(h/2),0,0,Math.PI*2);if(fill)c.fill();if(stroke>0)c.stroke()}
  else {roundedRectPath(c,0,0,w,h,radius);if(fill)c.fill();if(stroke>0)c.stroke()}c.restore();
