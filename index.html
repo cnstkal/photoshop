@@ -583,7 +583,7 @@ document.addEventListener('keydown',e=>{
   else if(k==='['||k===']'){const b=$('brushSize');b.value=Math.max(1,Math.min(80,+b.value+(k===']'?5:-5)));$('sizeVal').textContent=b.value}
   else if(k==='enter'&&cropRect)applyCrop();
   else if(k==='escape'&&cropRect){cropRect=null;drawCrop();$('docStatus').textContent=canvas.width+' × '+canvas.height}
-  else if(k==='delete'||k==='backspace'){e.preventDefault();if(selection)clearSelectionPixels();else if(selectedShape&&tool==='move')deleteLayer()}
+  else if(k==='delete'||k==='backspace'){e.preventDefault();if(selectedLayers.size&&tool==='move')deleteLayer();else if(selection)clearSelectionPixels();else if(selectedShape&&tool==='move')deleteLayer()}
   else if(k.startsWith('arrow')&&selectedShape&&!selectedShape.locked&&tool==='move'){e.preventDefault();const d=e.shiftKey?10:1,m=objectMeta(selectedShape);checkpoint();m.x+=k==='arrowright'?d:k==='arrowleft'?-d:0;m.y+=k==='arrowdown'?d:k==='arrowup'?-d:0;redrawObject(selectedShape);render();persist()}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Shift')window.__shapeShift=true});
