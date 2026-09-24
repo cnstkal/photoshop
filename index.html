@@ -228,7 +228,7 @@ function renderLayers(){
   [...layers].reverse().forEach((l,ri)=>{
     const i=layers.length-1-ri,el=document.createElement('div');
     const isSelected=selectedLayers.has(i),isActive=i===active;
-    el.className='layer'+(isSelected||isActive?' active':'');
+    el.className='layer'+(isSelected?' active':'');
     el.setAttribute('aria-selected',isSelected?'true':'false');
     el.innerHTML='<div class="thumb"></div><span></span><button class="lock" title="레이어 잠금">'+(l.locked?'🔒':'🔓')+'</button><button class="eye" title="표시/숨기기">'+(l.visible?'◉':'○')+'</button>';
     el.onclick=e=>{
