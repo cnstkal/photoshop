@@ -601,7 +601,7 @@ $('adjCancel').onclick=()=>{adjDraw('none');undoStack.pop();$('adjBack').classLi
 $('adjOk').onclick=()=>{raster(current());$('adjBack').classList.remove('show');render();persist()};
 /* 확대/이동/자르기 */
 let cropRect=null,cropDrag=null,panning=null,spaceDown=false;
-const selectedLayers=new Set();let layerSelectAnchor=null;
+let selectedLayers=new Set();let layerSelectAnchor=null;
 function cropAspect(){
   const v=$('cropRatio').value;if(v==='free')return null;
   const [a,b]=v.split(':').map(Number);return a/b;
