@@ -4,169 +4,185 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>PhotoLite</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>
 *{box-sizing:border-box}html,body{height:100%;margin:0}
-body{font-family:Arial,Pretendard,sans-serif;background:#1f1f1f;color:#eee;overflow:hidden}
-button,input,select{font:inherit}
-.app{height:100vh;display:grid;grid-template-rows:42px 1fr 28px}
-.topbar{background:#202020;border-bottom:1px solid #111;display:flex;align-items:center;padding:0 10px;gap:12px;font-size:13px}
-.brand{font-weight:700}.menu{display:flex;gap:12px;color:#d6d6d6}.menu span{cursor:pointer}
-.workspace{min-height:0;display:grid;grid-template-columns:54px minmax(0,1fr) 280px}
-.toolbar{background:#252525;border-right:1px solid #111;padding:7px 5px;display:flex;flex-direction:column;align-items:center;gap:5px}
-.tool{width:42px;height:42px;border:0;border-radius:4px;background:transparent;color:#ddd;cursor:pointer;font-size:18px}
-.tool:hover,.tool.active{background:#3a3a3a}.separator{height:1px;background:#444;width:36px;margin:4px 0}
-.center{min-width:0;min-height:0;background:#303030;display:grid;grid-template-rows:38px 1fr;position:relative}
-.options{background:#292929;border-bottom:1px solid #171717;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:12px}
+:root{--bg:#202020;--panel:#252525;--panel2:#2d2d2d;--line:#111;--text:#eee;--muted:#aaa;--hover:#3a3a3a;--accent:#4b86d1;--work:#333}
+body.light{--bg:#f3f3f3;--panel:#fff;--panel2:#f0f0f0;--line:#d6d6d6;--text:#222;--muted:#666;--hover:#e5e5e5;--work:#d9d9d9}
+body{font-family:Pretendard,system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-rows:42px 1fr 28px}
+.topbar{background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 10px;gap:14px}
+.brand{font-weight:700;font-size:14px;white-space:nowrap}.menus{display:flex;height:100%}
+.menu{position:relative;height:100%}.menu>button{height:100%;border:0;background:transparent;color:var(--text);padding:0 11px;cursor:pointer}
+.menu>button:hover,.menu.open>button{background:var(--hover)}
+.dropdown{display:none;position:absolute;top:42px;left:0;min-width:190px;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 22px #0007;padding:5px;z-index:100}
+.menu.open .dropdown{display:block}.dropdown button{display:flex;width:100%;justify-content:space-between;align-items:center;border:0;background:transparent;color:var(--text);padding:8px 10px;border-radius:4px;text-align:left;cursor:pointer;font-size:13px}
+.dropdown button:hover{background:var(--hover)}.shortcut{color:var(--muted);font-size:11px}.sep{height:1px;background:var(--line);margin:4px}
+.workspace{min-height:0;display:grid;grid-template-columns:54px minmax(0,1fr) 290px}
+.toolbar{background:var(--panel);border-right:1px solid var(--line);padding:7px 5px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.tool{width:42px;height:42px;border:0;border-radius:5px;background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center}.tool:hover,.tool.active{background:var(--hover)}
+.tool svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.separator{height:1px;background:var(--line);width:36px;margin:4px 0}
+.center{min-width:0;min-height:0;background:var(--work);display:grid;grid-template-rows:38px 1fr}
+.options{background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 12px;font-size:12px;overflow:auto;white-space:nowrap}
 .options label{display:flex;align-items:center;gap:6px}.options input[type=range]{width:100px}
-.canvasWrap{overflow:auto;position:relative;padding:24px;background:#333;display:flex;align-items:flex-start;justify-content:center}
-#canvas{background:#fff;box-shadow:0 8px 30px #111;touch-action:none;cursor:crosshair}
-.side{background:#252525;border-left:1px solid #111;display:flex;flex-direction:column;min-width:0}
-.panel{border-bottom:1px solid #111}.panel h3{margin:0;padding:10px 12px;font-size:12px;background:#2d2d2d}
-.panelBody{padding:10px 12px}.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;font-size:12px}
-.row input[type=range]{width:135px}.row input[type=color]{width:58px;height:28px;padding:0;border:0}
-.layer{display:flex;align-items:center;gap:8px;background:#313131;padding:8px;font-size:12px}.layer .thumb{width:26px;height:26px;background:#fff;border-radius:2px}.layer.active{outline:1px solid #5b84c4}
-.status{background:#202020;border-top:1px solid #111;display:flex;align-items:center;padding:0 10px;color:#aaa;font-size:11px;gap:16px}
-.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#888;font-size:15px;pointer-events:none}
-.fileBtn{position:relative;overflow:hidden}.fileBtn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.options button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:4px;padding:5px 8px;cursor:pointer}
+.canvasWrap{overflow:auto;position:relative;padding:24px;background:var(--work);display:flex;align-items:flex-start;justify-content:center}
+#canvas{background:#fff;box-shadow:0 8px 30px #0008;touch-action:none;cursor:crosshair}
+.side{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.panel{border-bottom:1px solid var(--line)}.panel h3{margin:0;padding:10px 12px;font-size:12px;background:var(--panel2)}
+.panelBody{padding:10px 12px}.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;font-size:12px}.row input[type=range]{width:145px}.row input[type=color]{width:58px;height:28px;padding:0;border:0}
+.layers{max-height:280px;overflow:auto}.layer{display:flex;align-items:center;gap:8px;background:var(--panel2);padding:8px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--line)}.layer .thumb{width:28px;height:28px;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 50%/8px 8px;border-radius:2px}.layer.active{outline:1px solid var(--accent);outline-offset:-1px}
+.layer .eye{margin-left:auto;border:0;background:transparent;color:var(--text);cursor:pointer}.side button.action{width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:5px;padding:7px;cursor:pointer}
+.status{background:var(--panel);border-top:1px solid var(--line);display:flex;align-items:center;padding:0 10px;color:var(--muted);font-size:11px;gap:16px}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;pointer-events:none}.hidden{display:none!important}
+.fileInput{display:none}
 @media(max-width:900px){.workspace{grid-template-columns:48px minmax(0,1fr)}.side{display:none}.options{overflow:auto}.canvasWrap{padding:12px}}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="topbar">
-    <div class="brand">PhotoLite</div>
-    <div class="menu"><span>파일</span><span>편집</span><span>이미지</span><span>레이어</span><span>필터</span><span>보기</span></div>
-  </div>
-  <div class="workspace">
-    <div class="toolbar">
-      <button class="tool active" data-tool="move" title="이동">↔</button>
-      <button class="tool" data-tool="brush" title="브러시">✎</button>
-      <button class="tool" data-tool="eraser" title="지우개">⌫</button>
-      <button class="tool" data-tool="text" title="문자">T</button>
-      <button class="tool" data-tool="rect" title="사각형">□</button>
-      <button class="tool" data-tool="circle" title="원">○</button>
-      <button class="tool" data-tool="eyedropper" title="스포이드">⌖</button>
-      <div class="separator"></div>
-      <label class="tool fileBtn" title="이미지 열기">▣<input id="open" type="file" accept="image/*"></label>
-      <button class="tool" id="fit" title="화면에 맞춤">⌗</button>
+<header class="topbar">
+  <div class="brand">PhotoLite</div>
+  <nav class="menus">
+    <div class="menu"><button data-menu="file">파일</button><div class="dropdown">
+      <button data-action="new">새 문서 <span class="shortcut">Ctrl+N</span></button>
+      <button data-action="open">열기 <span class="shortcut">Ctrl+O</span></button>
+      <button data-action="save">PNG로 저장 <span class="shortcut">Ctrl+S</span></button>
+    </div></div>
+    <div class="menu"><button data-menu="edit">편집</button><div class="dropdown">
+      <button data-action="undo">실행 취소 <span class="shortcut">Ctrl+Z</span></button>
+      <button data-action="redo">다시 실행 <span class="shortcut">Ctrl+Shift+Z</span></button>
+      <button data-action="clear">전체 지우기</button>
+    </div></div>
+    <div class="menu"><button data-menu="image">이미지</button><div class="dropdown">
+      <button data-action="rotateL">왼쪽으로 90°</button><button data-action="rotateR">오른쪽으로 90°</button>
+      <button data-action="flipH">좌우 반전</button><button data-action="flipV">상하 반전</button>
+    </div></div>
+    <div class="menu"><button data-menu="layer">레이어</button><div class="dropdown">
+      <button data-action="newLayer">새 레이어 <span class="shortcut">Ctrl+Shift+N</span></button>
+      <button data-action="deleteLayer">레이어 삭제</button>
+      <button data-action="mergeDown">아래 레이어와 병합</button>
+    </div></div>
+    <div class="menu"><button data-menu="filter">필터</button><div class="dropdown">
+      <button data-action="gray">흑백</button><button data-action="invert">반전</button><button data-action="bright">밝게</button>
+    </div></div>
+    <div class="menu"><button data-menu="view">보기</button><div class="dropdown">
+      <button data-action="fit">화면에 맞춤</button><button data-action="zoom50">50%</button><button data-action="zoom100">100%</button><button data-action="zoom200">200%</button>
+      <div class="sep"></div><button data-action="theme">화이트 모드 전환</button>
+    </div></div>
+  </nav>
+</header>
+<div class="workspace">
+  <aside class="toolbar">
+    <button class="tool active" data-tool="move" title="이동"><svg viewBox="0 0 24 24"><path d="m5 9 3-3 3 3"/><path d="M8 6v12"/><path d="m19 15-3 3-3-3"/><path d="M16 18V6"/></svg></button>
+    <button class="tool" data-tool="brush" title="브러시"><svg viewBox="0 0 24 24"><path d="M15 6 18 3l3 3-3 3"/><path d="m14 7-7 7"/><path d="M5 21c2-3 5-2 6-5"/><path d="M3 18c1-1 2-1 3 0"/></svg></button>
+    <button class="tool" data-tool="eraser" title="지우개"><svg viewBox="0 0 24 24"><path d="m7 16 9-9 4 4-9 9H7l-4-4 4-4"/><path d="m14 19 7-7"/></svg></button>
+    <button class="tool" data-tool="text" title="문자"><svg viewBox="0 0 24 24"><path d="M4 5h16"/><path d="M12 5v14"/><path d="M8 19h8"/></svg></button>
+    <button class="tool" data-tool="rect" title="사각형"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1"/></svg></button>
+    <button class="tool" data-tool="circle" title="원"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></svg></button>
+    <button class="tool" data-tool="eyedropper" title="스포이드"><svg viewBox="0 0 24 24"><path d="m14 4 6 6"/><path d="m13 5 6 6-7 7H7v-5z"/><path d="m4 20 3-3"/></svg></button>
+    <div class="separator"></div>
+    <button class="tool" id="fit" title="화면에 맞춤"><svg viewBox="0 0 24 24"><path d="M4 9V5h4"/><path d="M20 9V5h-4"/><path d="M4 15v4h4"/><path d="M20 15v4h-4"/></svg></button>
+  </aside>
+  <main class="center">
+    <div class="options">
+      <label>도구 <b id="toolName">이동</b></label><label>크기 <input id="brushSize" type="range" min="1" max="80" value="20"><span id="sizeVal">20</span></label>
+      <label>색 <input id="color" type="color" value="#111111"></label><button id="clear">전체 지우기</button>
     </div>
-    <div class="center">
-      <div class="options">
-        <label>도구 <b id="toolName">이동</b></label>
-        <label>크기 <input id="brushSize" type="range" min="1" max="80" value="20"><span id="sizeVal">20</span></label>
-        <label>색 <input id="color" type="color" value="#111111"></label>
-        <button id="clear">전체 지우기</button>
-      </div>
-      <div class="canvasWrap" id="wrap">
-        <div class="empty" id="empty">이미지를 열어 주세요</div>
-        <canvas id="canvas" width="900" height="650"></canvas>
-      </div>
-    </div>
-    <aside class="side">
-      <section class="panel">
-        <h3>레이어</h3>
-        <div class="panelBody">
-          <div class="layer active"><div class="thumb"></div><span>Background</span></div>
-          <button id="newLayer" style="margin-top:8px;width:100%">+ 새 레이어</button>
-        </div>
-      </section>
-      <section class="panel">
-        <h3>도구 옵션</h3>
-        <div class="panelBody">
-          <div class="row"><span>불투명도</span><span id="opacityVal">100%</span></div>
-          <input id="opacity" type="range" min="1" max="100" value="100" style="width:100%">
-        </div>
-      </section>
-      <section class="panel">
-        <h3>내보내기</h3>
-        <div class="panelBody">
-          <button id="download" style="width:100%">PNG 저장</button>
-        </div>
-      </section>
-    </aside>
-  </div>
-  <div class="status"><span id="docStatus">새 문서</span><span id="zoom">100%</span><span>PhotoLite — 간소화된 포토샵</span></div>
+    <div class="canvasWrap" id="wrap"><div class="empty" id="empty">이미지를 열어 주세요</div><canvas id="canvas"></canvas></div>
+  </main>
+  <aside class="side">
+    <section class="panel"><h3>레이어</h3><div class="panelBody"><div id="layers" class="layers"></div><button id="newLayerBtn" class="action" style="margin-top:8px">+ 새 레이어</button></div></section>
+    <section class="panel"><h3>도구 옵션</h3><div class="panelBody"><div class="row"><span>불투명도</span><span id="opacityVal">100%</span></div><input id="opacity" type="range" min="1" max="100" value="100" style="width:100%"></div></section>
+    <section class="panel"><h3>내보내기</h3><div class="panelBody"><button id="download" class="action">PNG 저장</button></div></section>
+  </aside>
 </div>
+<footer class="status"><span id="docStatus">새 문서</span><span id="zoom">100%</span><span>PhotoLite</span></footer>
+<input id="open" class="fileInput" type="file" accept="image/*">
 <script>
-const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d',{alpha:true});
-ctx.imageSmoothingEnabled=true;
-ctx.imageSmoothingQuality='high';
-const $=id=>document.getElementById(id);
-let tool='move',img=null,scale=1,painting=false,lastX=0,lastY=0;
+const $=id=>document.getElementById(id),canvas=$('canvas'),ctx=canvas.getContext('2d',{alpha:true});
+let tool='move',scale=1,painting=false,lastX=0,lastY=0,layers=[],active=0,undoStack=[],redoStack=[],img=null;
 
-function setTool(t){
-  tool=t;
-  document.querySelectorAll('.tool[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));
-  const names={move:'이동',brush:'브러시',eraser:'지우개',text:'문자',rect:'사각형',circle:'원',eyedropper:'스포이드'};
-  $('toolName').textContent=names[t]||t;
+function iconLayerName(){return layers.length?layers[active]?.name:'Background'}
+function makeLayer(name='레이어'){
+  const c=document.createElement('canvas');c.width=canvas.width;c.height=canvas.height;
+  return {name,canvas:c,visible:true,opacity:1};
 }
+function current(){return layers[active]}
+function setTool(t){tool=t;document.querySelectorAll('.tool[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));const n={move:'이동',brush:'브러시',eraser:'지우개',text:'문자',rect:'사각형',circle:'원',eyedropper:'스포이드'};$('toolName').textContent=n[t]||t}
 document.querySelectorAll('.tool[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
 $('brushSize').oninput=e=>$('sizeVal').textContent=e.target.value;
 
-function canvasPoint(e){
-  const r=canvas.getBoundingClientRect();
-  return {x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  layers.forEach(l=>{if(l.visible){ctx.globalAlpha=l.opacity;ctx.drawImage(l.canvas,0,0)}});ctx.globalAlpha=1;
+  renderLayers();
 }
-function fit(){
-  if(!img)return;
-  const wrap=$('wrap'), pad=48;
-  scale=Math.min((wrap.clientWidth-pad)/img.width,(wrap.clientHeight-pad)/img.height,1);
-  canvas.style.width=(img.width*scale)+'px';
-  canvas.style.height=(img.height*scale)+'px';
-  $('zoom').textContent=Math.round(scale*100)+'%';
+function renderLayers(){
+  $('layers').innerHTML='';
+  [...layers].reverse().forEach((l,ri)=>{
+    const i=layers.length-1-ri,el=document.createElement('div');el.className='layer'+(i===active?' active':'');
+    el.innerHTML='<div class="thumb"></div><span>'+l.name+'</span><button class="eye">'+(l.visible?'◉':'○')+'</button>';
+    el.onclick=()=>{active=i;renderLayers()};
+    el.querySelector('.eye').onclick=e=>{e.stopPropagation();l.visible=!l.visible;render()};
+    $('layers').appendChild(el);
+  });
 }
-function resetCanvas(w,h){
-  // 작업 캔버스는 업로드한 원본의 실제 픽셀 크기 그대로 생성합니다.
-  // 화면에 작게 보이는 것은 CSS 표시 크기일 뿐, 실제 작업/저장 해상도는 줄이지 않습니다.
-  canvas.width=w;
-  canvas.height=h;
-  ctx.clearRect(0,0,w,h);
-  ctx.imageSmoothingEnabled=true;
-  ctx.imageSmoothingQuality='high';
+function fit(){if(!canvas.width)return;const wrap=$('wrap'),pad=48;scale=Math.min((wrap.clientWidth-pad)/canvas.width,(wrap.clientHeight-pad)/canvas.height,1);canvas.style.width=canvas.width*scale+'px';canvas.style.height=canvas.height*scale+'px';$('zoom').textContent=Math.round(scale*100)+'%'}
+function setZoom(z){scale=z;canvas.style.width=canvas.width*z+'px';canvas.style.height=canvas.height*z+'px';$('zoom').textContent=Math.round(z*100)+'%'}
+function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
+function snapshot(){return layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,data:l.canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height)}))}
+function restore(s){layers=s.map(x=>{const l=makeLayer(x.name);l.visible=x.visible;l.opacity=x.opacity;l.canvas.getContext('2d').putImageData(x.data,0,0);return l});active=Math.min(active,layers.length-1);render()}
+function checkpoint(){if(!layers.length)return;undoStack.push(snapshot());if(undoStack.length>30)undoStack.shift();redoStack=[]}
+function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restore(undoStack.pop())}
+function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restore(redoStack.pop())}
+function newDocument(){
+  const w=parseInt(prompt('가로 크기', '1200')),h=parseInt(prompt('세로 크기','800'));if(!w||!h)return;
+  checkpoint();canvas.width=w;canvas.height=h;layers=[makeLayer('Background')];active=0;img=null;$('empty').classList.add('hidden');$('docStatus').textContent=w+' × '+h;render();fit()
 }
-$('open').addEventListener('change',e=>{
-  const f=e.target.files?.[0];if(!f)return;
-  const u=URL.createObjectURL(f),im=new Image();
-  im.onload=()=>{
-    img=im;
-    resetCanvas(im.naturalWidth,im.naturalHeight);
-    ctx.drawImage(im,0,0,im.naturalWidth,im.naturalHeight);$('empty').style.display='none';$('docStatus').textContent=im.width+' × '+im.height;fit();URL.revokeObjectURL(u)};
-  im.onerror=()=>{URL.revokeObjectURL(u);alert('이미지를 불러오지 못했습니다.')};
-  im.src=u;
+function openImage(){
+  $('open').value='';$('open').click()
+}
+$('open').onchange=e=>{
+  const f=e.target.files?.[0];if(!f)return;const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{canvas.width=im.naturalWidth;canvas.height=im.naturalHeight;const l=makeLayer('Background');l.canvas.getContext('2d').drawImage(im,0,0);layers=[l];active=0;img=im;$('empty').classList.add('hidden');$('docStatus').textContent=im.naturalWidth+' × '+im.naturalHeight;render();fit();URL.revokeObjectURL(u)}
+  im.onerror=()=>{URL.revokeObjectURL(u);alert('이미지를 불러오지 못했습니다.')}
+  im.src=u
+}
+function save(){canvas.toBlob(b=>{if(!b)return;const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='photolite.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png')}
+function addLayer(){checkpoint();layers.push(makeLayer('레이어 '+layers.length));active=layers.length-1;render()}
+function deleteLayer(){if(layers.length<=1)return;checkpoint();layers.splice(active,1);active=Math.max(0,active-1);render()}
+function mergeDown(){if(active<=0)return;checkpoint();const l=layers[active-1],c=layers[active].canvas.getContext('2d');l.canvas.getContext('2d').globalAlpha=layers[active].opacity;c.drawImage(layers[active].canvas,0,0);layers.splice(active,1);active--;render()}
+function filter(type){
+  if(!layers.length)return;checkpoint();const l=current(),c=l.canvas.getContext('2d'),d=c.getImageData(0,0,canvas.width,canvas.height),p=d.data;
+  for(let i=0;i<p.length;i+=4){if(type==='gray'){const v=.299*p[i]+.587*p[i+1]+.114*p[i+2];p[i]=p[i+1]=p[i+2]=v}else if(type==='invert'){p[i]=255-p[i];p[i+1]=255-p[i+1];p[i+2]=255-p[i+2]}else{p[i]=Math.min(255,p[i]*1.18);p[i+1]=Math.min(255,p[i+1]*1.18);p[i+2]=Math.min(255,p[i+2]*1.18)}}c.putImageData(d,0,0);render()
+}
+function rotate(dir){if(!layers.length)return;checkpoint();const w=canvas.width,h=canvas.height;const old=layers;canvas.width=h;canvas.height=w;layers=old.map(l=>{const n=makeLayer(l.name),c=n.canvas.getContext('2d');c.save();if(dir>0){c.translate(h,0);c.rotate(Math.PI/2)}else{c.translate(0,w);c.rotate(-Math.PI/2)}c.drawImage(l.canvas,0,0);c.restore();return n});render();fit()}
+function flip(h){if(!layers.length)return;checkpoint();layers.forEach(l=>{const n=document.createElement('canvas');n.width=canvas.width;n.height=canvas.height;const c=n.getContext('2d');c.save();c.translate(h?canvas.width:0,h?0:canvas.height);c.scale(h?-1:1,h?1:-1);c.drawImage(l.canvas,0,0);c.restore();l.canvas=n});render()}
+function transformFilter(fn){if(!layers.length)return;filter(fn)}
+function act(a){
+  closeMenus();
+  const map={new:newDocument,open:openImage,save,undo,redo,clear:()=>{if(confirm('현재 레이어를 지울까요?')){checkpoint();current().canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);render()}},newLayer:addLayer,deleteLayer,mergeDown,gray:()=>filter('gray'),invert:()=>filter('invert'),bright:()=>filter('bright'),rotateL:()=>rotate(-1),rotateR:()=>rotate(1),flipH:()=>flip(true),flipV:()=>flip(false),fit,zoom50:()=>setZoom(.5),zoom100:()=>setZoom(1),zoom200:()=>setZoom(2),theme:()=>{document.body.classList.toggle('light');document.querySelector('[data-action="theme"]').textContent=document.body.classList.contains('light')?'다크 모드 전환':'화이트 모드 전환'}};
+  if(map[a])map[a]()
+}
+document.querySelectorAll('[data-menu]').forEach(b=>b.onclick=e=>{e.stopPropagation();const m=b.parentElement;document.querySelectorAll('.menu').forEach(x=>x!==m&&x.classList.remove('open'));m.classList.toggle('open')});
+document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>act(b.dataset.action));
+function closeMenus(){document.querySelectorAll('.menu').forEach(x=>x.classList.remove('open'))}document.addEventListener('click',closeMenus);
+$('fit').onclick=fit;$('clear').onclick=()=>act('clear');$('newLayerBtn').onclick=addLayer;$('download').onclick=save;
+$('opacity').oninput=e=>{if(current()){current().opacity=e.target.value/100;render()}$('opacityVal').textContent=e.target.value+'%'};
+$('canvas').addEventListener('pointerdown',e=>{
+  const p=point(e);
+  if(!layers.length)return;
+  if(tool==='brush'||tool==='eraser'){checkpoint();painting=true;lastX=p.x;lastY=p.y;canvas.setPointerCapture(e.pointerId)}
+  else if(tool==='text'){checkpoint();const t=prompt('문자를 입력하세요');if(t){const c=current().canvas.getContext('2d');c.fillStyle=$('color').value;c.font='32px Pretendard';c.fillText(t,p.x,p.y);render()}}
+  else if(tool==='rect'){checkpoint();const c=current().canvas.getContext('2d');c.strokeStyle=$('color').value;c.lineWidth=+$('brushSize').value;c.strokeRect(p.x-40,p.y-30,80,60);render()}
+  else if(tool==='circle'){checkpoint();const c=current().canvas.getContext('2d');c.strokeStyle=$('color').value;c.lineWidth=+$('brushSize').value;c.beginPath();c.arc(p.x,p.y,35,0,Math.PI*2);c.stroke();render()}
+  else if(tool==='eyedropper'){const d=ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data;$('color').value='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('')}
 });
-canvas.addEventListener('pointerdown',e=>{
-  const p=canvasPoint(e);
-  if(tool==='brush'||tool==='eraser'){
-    painting=true;lastX=p.x;lastY=p.y;canvas.setPointerCapture(e.pointerId);
-  }else if(tool==='text'){
-    const txt=prompt('문자를 입력하세요');
-    if(txt){ctx.fillStyle=$('color').value;ctx.font='32px Arial';ctx.fillText(txt.slice(0,1),p.x,p.y)}
-  }else if(tool==='rect'){
-    ctx.strokeStyle=$('color').value;ctx.lineWidth=+$('brushSize').value;ctx.strokeRect(p.x-40,p.y-30,80,60);
-  }else if(tool==='circle'){
-    ctx.strokeStyle=$('color').value;ctx.lineWidth=+$('brushSize').value;ctx.beginPath();ctx.arc(p.x,p.y,35,0,Math.PI*2);ctx.stroke();
-  }else if(tool==='eyedropper'){
-    const d=ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data;
-    const hex='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
-    $('color').value=hex;
-  }
-});
-canvas.addEventListener('pointermove',e=>{
-  if(!painting)return;const p=canvasPoint(e);
-  const size=+$('brushSize').value;
-  ctx.strokeStyle=$('color').value;ctx.lineWidth=size;ctx.lineCap='round';
-  if(tool==='eraser'){ctx.globalCompositeOperation='destination-out'}else{ctx.globalCompositeOperation='source-over'}
-  ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.globalCompositeOperation='source-over';
-  lastX=p.x;lastY=p.y;
-});
-canvas.addEventListener('pointerup',()=>painting=false);
-canvas.addEventListener('pointercancel',()=>painting=false);
-$('fit').onclick=fit;
-$('clear').onclick=()=>{if(confirm('현재 캔버스를 모두 지울까요?')){ctx.clearRect(0,0,canvas.width,canvas.height)}};
-$('opacity').oninput=e=>$('opacityVal').textContent=e.target.value+'%';
-$('download').onclick=()=>canvas.toBlob(b=>{const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='photolite.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png');
-$('newLayer').onclick=()=>alert('간소화 버전에서는 새 레이어 UI만 제공됩니다. 다음 단계에서 실제 레이어 합성을 추가할 수 있습니다.');
-window.addEventListener('resize',fit);
+canvas.addEventListener('pointermove',e=>{if(!painting)return;const p=point(e),c=current().canvas.getContext('2d'),size=+$('brushSize').value;c.strokeStyle=$('color').value;c.lineWidth=size;c.lineCap='round';c.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';c.beginPath();c.moveTo(lastX,lastY);c.lineTo(p.x,p.y);c.stroke();c.globalCompositeOperation='source-over';lastX=p.x;lastY=p.y;render()});
+canvas.addEventListener('pointerup',()=>painting=false);canvas.addEventListener('pointercancel',()=>painting=false);
+document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&k==='s'){e.preventDefault();save()}else if((e.ctrlKey||e.metaKey)&&k==='o'){e.preventDefault();openImage()}else if((e.ctrlKey||e.metaKey)&&k==='n'){e.preventDefault();newDocument()}else if((e.ctrlKey||e.metaKey)&&e.shiftKey&&k==='z'){e.preventDefault();redo()}});
+renderLayers();
 </script>
 </body>
 </html>
