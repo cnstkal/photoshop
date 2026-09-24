@@ -88,7 +88,9 @@ button,input,select{font:inherit}
   <div class="status"><span id="docStatus">새 문서</span><span id="zoom">100%</span><span>PhotoLite — 간소화된 포토샵</span></div>
 </div>
 <script>
-const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d',{alpha:true});
+ctx.imageSmoothingEnabled=true;
+ctx.imageSmoothingQuality='high';
 const $=id=>document.getElementById(id);
 let tool='move',img=null,scale=1,painting=false,lastX=0,lastY=0;
 
@@ -114,12 +116,21 @@ function fit(){
   $('zoom').textContent=Math.round(scale*100)+'%';
 }
 function resetCanvas(w,h){
-  canvas.width=w;canvas.height=h;ctx.clearRect(0,0,w,h);
+  // 작업 캔버스는 업로드한 원본의 실제 픽셀 크기 그대로 생성합니다.
+  // 화면에 작게 보이는 것은 CSS 표시 크기일 뿐, 실제 작업/저장 해상도는 줄이지 않습니다.
+  canvas.width=w;
+  canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
 }
 $('open').addEventListener('change',e=>{
   const f=e.target.files?.[0];if(!f)return;
   const u=URL.createObjectURL(f),im=new Image();
-  im.onload=()=>{img=im;resetCanvas(im.width,im.height);ctx.drawImage(im,0,0);$('empty').style.display='none';$('docStatus').textContent=im.width+' × '+im.height;fit();URL.revokeObjectURL(u)};
+  im.onload=()=>{
+    img=im;
+    resetCanvas(im.naturalWidth,im.naturalHeight);
+    ctx.drawImage(im,0,0,im.naturalWidth,im.naturalHeight);$('empty').style.display='none';$('docStatus').textContent=im.width+' × '+im.height;fit();URL.revokeObjectURL(u)};
   im.onerror=()=>{URL.revokeObjectURL(u);alert('이미지를 불러오지 못했습니다.')};
   im.src=u;
 });
