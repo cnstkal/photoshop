@@ -166,7 +166,7 @@ $('open').onchange=e=>{
   im.src=u
 }
 function save(){canvas.toBlob(b=>{if(!b)return;const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='photolite.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png')}
-function addLayer(){checkpoint();const index=active+1;layers.splice(index,0,makeLayer('레이어 '+(layers.length+1)));active=index;render()}
+function addLayer(){checkpoint();const index=layers.length?active+1:0;layers.splice(index,0,makeLayer('레이어 '+(layers.length+1)));active=index;render()}
 function deleteLayer(){if(!layers.length)return;checkpoint();layers.splice(active,1);if(!layers.length)active=0;else active=Math.min(active,layers.length-1);render()}
 function mergeDown(){if(active<=0)return;checkpoint();const upper=layers[active],lower=layers[active-1],d=lower.canvas.getContext('2d');d.save();d.globalAlpha=upper.opacity;d.drawImage(upper.canvas,0,0);d.restore();layers.splice(active,1);active--;render()}
 function filter(type){
