@@ -310,24 +310,29 @@ function checkpoint(){undoStack.push(snapshot());if(undoStack.length>30)undoStac
 function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restore(undoStack.pop())}
 function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restore(redoStack.pop())}
 function newDocument(){
-  $('newDocBack').classList.add('show');
-  setTimeout(()=>$('newDocWidth').focus(),30);
+  const back=$('newDocBack');
+  if(!back)return;
+  back.classList.add('show');
+  requestAnimationFrame(()=>{const w=$('newDocWidth');if(w){w.focus();w.select()}});
 }
 function createNewDocument(){
-  const w=Math.max(1,Math.min(16000,parseInt($('newDocWidth').value)||1200));
-  const h=Math.max(1,Math.min(16000,parseInt($('newDocHeight').value)||800));
-  const bg=$('newDocBg').value||'#ffffff';
-  const alpha=Math.max(0,Math.min(100,parseInt($('newDocOpacity').value)||100))/100;
-  checkpoint();
+  const widthEl=$('newDocWidth'),heightEl=$('newDocHeight'),bgEl=$('newDocBg'),opacityEl=$('newDocOpacity'),transparentEl=$('newDocTransparent');
+  const w=Math.max(1,Math.min(16000,Number.parseInt(widthEl?.value,10)||1200));
+  const h=Math.max(1,Math.min(16000,Number.parseInt(heightEl?.value,10)||800));
+  const bg=bgEl?.value||'#ffffff';
+  const alpha=Math.max(0,Math.min(100,Number.parseInt(opacityEl?.value,10)||100))/100;
+  if(canvas.width&&canvas.height&&layers.length)checkpoint();
   canvas.width=w;canvas.height=h;
   const l=makeLayer('레이어 1');
-  if($('newDocTransparent').checked===false){
-    const c=l.canvas.getContext('2d');c.save();c.globalAlpha=alpha;c.fillStyle=bg;c.fillRect(0,0,w,h);c.restore();
+  if(transparentEl?.checked===false){
+    const c=l.canvas.getContext('2d');c.globalAlpha=alpha;c.fillStyle=bg;c.fillRect(0,0,w,h);c.globalAlpha=1;
   }
-  layers=[l];active=0;selectedLayers.clear();selectedLayers.add(0);img=null;selectedShape=null;
+  layers=[l];active=0;selectedLayers=new Set([0]);layerSelectAnchor=0;img=null;selectedShape=null;selection=null;selectionRegions=[];
   $('empty').classList.add('hidden');$('newDocBack').classList.remove('show');
-  $('docStatus').textContent=w+' × '+h;render();fit();persist();
+  $('docStatus').textContent=w+' × '+h+' px';
+  renderLayers();syncLayerControls();render();fit();persist();
 }
+
 $('newDocApply').onclick=createNewDocument;
 $('newDocCancel').onclick=()=>$('newDocBack').classList.remove('show');
 $('newDocBack').onclick=e=>{if(e.target===$('newDocBack'))$('newDocBack').classList.remove('show')};
@@ -340,13 +345,25 @@ $('newDocTransparent').onchange=e=>{
   $('newDocOpacityVal').textContent=e.target.checked?'—':$('newDocOpacity').value+'%';
 }
 function openImage(){
-  $('open').value='';$('open').click()
+  const input=$('open');if(!input)return;
+  input.value='';
+  if(typeof input.showPicker==='function'){try{input.showPicker();return}catch(e){}}
+  input.click();
 }
 $('open').onchange=e=>{
-  const f=e.target.files?.[0];if(!f)return;const u=URL.createObjectURL(f),im=new Image();
-  im.onload=()=>{canvas.width=im.naturalWidth;canvas.height=im.naturalHeight;const l=makeLayer('레이어 1');l.canvas.getContext('2d').drawImage(im,0,0);layers=[l];active=0;selectedLayers.clear();selectedLayers.add(0);img=im;$('empty').classList.add('hidden');$('docStatus').textContent=im.naturalWidth+' × '+im.naturalHeight;render();fit();persist();URL.revokeObjectURL(u)}
-  im.onerror=()=>{URL.revokeObjectURL(u);alert('이미지를 불러오지 못했습니다.')}
-  im.src=u
+  const input=e.currentTarget,f=input.files?.[0];if(!f)return;
+  const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{
+    try{
+      canvas.width=im.naturalWidth;canvas.height=im.naturalHeight;
+      const l=makeLayer('레이어 1');l.canvas.getContext('2d').drawImage(im,0,0);
+      layers=[l];active=0;selectedLayers=new Set([0]);layerSelectAnchor=0;img=im;selectedShape=null;selection=null;selectionRegions=[];
+      $('empty').classList.add('hidden');$('docStatus').textContent=im.naturalWidth+' × '+im.naturalHeight+' px';
+      renderLayers();syncLayerControls();render();fit();persist();
+    }finally{URL.revokeObjectURL(u)}
+  };
+  im.onerror=()=>{URL.revokeObjectURL(u);alert('이미지를 불러오지 못했습니다.')};
+  im.src=u;
 }
 function save(){canvas.toBlob(b=>{if(!b)return;const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='photolite.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png')}
 function addLayer(){checkpoint();const index=layers.length?active+1:0;layers.splice(index,0,makeLayer('레이어 '+(layers.length+1)));active=index;selectedLayers.clear();selectedLayers.add(active);selectedShape=null;renderLayers();syncLayerControls();render();persist()}
