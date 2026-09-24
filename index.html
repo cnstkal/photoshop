@@ -363,7 +363,13 @@ function drawTextLayer(l){
   lines.forEach((line,i)=>c.fillText(line,0,i*(t.lineHeight||Math.round(t.size*1.2))));
   c.restore();
 }
-function objectMeta(l){return l?.shape||l?.text||l?.image||null}
+function objectMeta(l){
+  if(l?.line){
+    const t=l.line;
+    return {x:Math.min(t.x1,t.x2),y:Math.min(t.y1,t.y2),w:Math.abs(t.x2-t.x1)||1,h:Math.abs(t.y2-t.y1)||1,angle:Math.atan2(t.y2-t.y1,t.x2-t.x1),line:t};
+  }
+  return l?.shape||l?.text||l?.image||null
+}
 function syncLayerControls(){
   const l=current(); if(!l)return;
   $('opacity').value=Math.round((l.opacity??1)*100); $('opacityVal').textContent=$('opacity').value+'%';
@@ -446,17 +452,7 @@ canvas.addEventListener('pointerdown',e=>{const p=point(e);if(tool==='move'){if(
   if(tool==='rectSelect'){selecting='rect';selStart=p;canvas.setPointerCapture(e.pointerId);return}
   if(tool==='lasso'){selecting='lasso';lassoPts=[p];canvas.setPointerCapture(e.pointerId);return}
   if(tool==='wand'){applyWandSelection(p);return}
-  if(tool==='line'){
-    lineStart=p;
-    const lineLayer=makeLayer('직선 '+(layers.filter(x=>x.line).length+1));
-    lineLayer.line={x1:p.x,y1:p.y,x2:p.x,y2:p.y,color:$('color').value,width:+$('brushSize').value||1,opacity:(+$('opacity').value||100)/100};
-    layers.splice(active+1,0,lineLayer);active++;
-    selectedShape=lineLayer;
-    drawLineLayer(lineLayer);
-    renderLayers();render();persist();
-    canvas.setPointerCapture(e.pointerId);
-    return
-  }
+  if(tool==='line'){return}
   if(tool==='gradient'){gradStart=p;canvas.setPointerCapture(e.pointerId);return}
   if(tool==='brush'||tool==='eraser'){if(current().locked)return;checkpoint();raster(current());selMaskBase=selection?cloneC(current().canvas):null;painting=true;lastX=p.x;lastY=p.y;canvas.setPointerCapture(e.pointerId)}else if(tool==='fill'){window.__fillEvent=e;selMaskBase=selection?cloneC(current().canvas):null;floodFill();clampToSelection(selMaskBase)}else if(tool==='text'){openTextModal(p)}else if(tool==='shape'){if(current().locked)return;checkpoint();shapeSnapshot=snapshot();shapeStart=p;canvas.setPointerCapture(e.pointerId)}else if(tool==='eyedropper'){const d=ctx.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data;$('color').value='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('')}});
 function brushStroke(c,x0,y0,x1,y1){
@@ -483,6 +479,25 @@ function updateCursorPreview(e){
   const size=+$('brushSize').value*scale;cp.style.display='block';cp.style.width=size+'px';cp.style.height=size+'px';cp.style.left=e.clientX+'px';cp.style.top=e.clientY+'px';
 }
 canvas.addEventListener('pointerleave',()=>$('cursorPreview').style.display='none');
+canvas.addEventListener('click',e=>{
+  if(tool!=='line')return;
+  const p=point(e);
+  if(!lineStart){
+    lineStart=p;
+    octx.clearRect(0,0,overlay.width,overlay.height);
+    return;
+  }
+  checkpoint();
+  const n=makeLayer('직선 '+(layers.filter(x=>x.line).length+1));
+  n.line={x1:lineStart.x,y1:lineStart.y,x2:p.x,y2:p.y,color:$('color').value,width:+$('brushSize').value||1,opacity:(+$('opacity').value||100)/100};
+  layers.splice(active+1,0,n);active++;
+  selectedShape=n;
+  selectedLayers.clear();selectedLayers.add(active);
+  lineStart=null;
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  drawLineLayer(n);
+  renderLayers();render();persist();
+});
 canvas.addEventListener('pointermove',e=>{
   updateCursorPreview(e);
   if(tool==='move'&&dragMode){selectionPointerMove(e);return}
@@ -490,8 +505,9 @@ canvas.addEventListener('pointermove',e=>{
   if(painting && (e.buttons & 1)){const c=current().canvas.getContext('2d');brushStroke(c,lastX,lastY,p.x,p.y);lastX=p.x;lastY=p.y;render()}
   else if(shapeStart)previewShape(p);
   else if(lineStart){
-    const liveLine=layers[active];
-    if(liveLine?.line){liveLine.line.x2=p.x;liveLine.line.y2=p.y;drawLineLayer(liveLine);render()}
+    octx.clearRect(0,0,overlay.width,overlay.height);
+    octx.save();octx.strokeStyle=$('color').value;octx.lineWidth=+$('brushSize').value;octx.lineCap='round';
+    octx.beginPath();octx.moveTo(lineStart.x,lineStart.y);octx.lineTo(p.x,p.y);octx.stroke();octx.restore();
   }
   else if(gradStart){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.strokeStyle='#4b86d1';octx.lineWidth=2/scale;octx.beginPath();octx.moveTo(gradStart.x,gradStart.y);octx.lineTo(p.x,p.y);octx.stroke();octx.restore()}
   else if(selecting==='rect'){octx.clearRect(0,0,overlay.width,overlay.height);octx.save();octx.setLineDash([6/scale,4/scale]);octx.strokeStyle='#4b86d1';octx.lineWidth=1.5/scale;octx.strokeRect(Math.min(selStart.x,p.x),Math.min(selStart.y,p.y),Math.abs(p.x-selStart.x),Math.abs(p.y-selStart.y));octx.restore()}
@@ -501,12 +517,7 @@ canvas.addEventListener('pointerup',e=>{if(tool==='move'&&dragMode){selectionPoi
   if(selecting==='rect'){const p=point(e);setSelectionMask(makeRectMask(Math.min(selStart.x,p.x),Math.min(selStart.y,p.y),Math.abs(p.x-selStart.x),Math.abs(p.y-selStart.y)));selecting=null;return}
   if(selecting==='lasso'){setSelectionMask(makeLassoMask(lassoPts));selecting=null;lassoPts=[];return}
   if(lineStart){
-    const p=point(e),liveLine=layers[active];
-    if(liveLine?.line){liveLine.line.x2=p.x;liveLine.line.y2=p.y;drawLineLayer(liveLine)}
-    lineStart=null;
-    canvas.releasePointerCapture?.(e.pointerId);
-    renderLayers();render();persist();
-    return
+    octx.clearRect(0,0,overlay.width,overlay.height);
   }
   if(gradStart){const p=point(e);if(!current()||current().locked){gradStart=null;octx.clearRect(0,0,overlay.width,overlay.height);return}checkpoint();raster(current());const c=current().canvas.getContext('2d'),base=selection?cloneC(current().canvas):null,g=c.createLinearGradient(gradStart.x,gradStart.y,p.x,p.y);g.addColorStop(0,$('fillColor')?.value||$('color').value);g.addColorStop(1,$('color').value);c.fillStyle=g;c.fillRect(0,0,canvas.width,canvas.height);clampToSelection(base);octx.clearRect(0,0,overlay.width,overlay.height);gradStart=null;render();persist();return}
   if(painting){painting=false;clampToSelection(selMaskBase);selMaskBase=null;render();persist();return}
