@@ -34,7 +34,7 @@ button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-ro
 .textModal{width:min(460px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);box-shadow:0 18px 50px #0009;border-radius:8px;overflow:hidden}
 .textModal h3{margin:0;padding:14px 16px;background:var(--panel2);font-size:14px}.textModalBody{padding:16px}.textModal textarea{width:100%;min-height:110px;resize:vertical;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:5px;padding:10px;outline:none}
 .textGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.textGrid label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted)}.textGrid input,.textGrid select{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:4px;padding:7px}
-.textChecks{display:flex;gap:14px;margin-top:12px;font-size:12px}.textChecks label{display:flex;align-items:center;gap:5px}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.modalActions button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:5px;padding:8px 14px;cursor:pointer}.modalActions .primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.textChecks{display:flex;gap:14px;margin-top:12px;font-size:12px}.textChecks label{display:flex;align-items:center;gap:5px}.modalBack .textModal label{font-size:13px}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.modalActions button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:5px;padding:8px 14px;cursor:pointer}.modalActions .primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .options button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:4px;padding:5px 8px;cursor:pointer}
 .canvasWrap{overflow:auto;position:relative;padding:24px;background:var(--work);display:flex;align-items:flex-start;justify-content:center}
 #canvas{background:#fff;box-shadow:0 8px 30px #0008;touch-action:none;cursor:default}
@@ -42,7 +42,8 @@ button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-ro
 .side{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
 .panel{border-bottom:1px solid var(--line)}.panel h3{margin:0;padding:10px 12px;font-size:12px;background:var(--panel2)}
 .panelBody{padding:10px 12px}.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;font-size:12px}.row input[type=range]{width:145px}.row select{width:145px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:4px;padding:5px}.row input[type=color]{width:58px;height:28px;padding:0;border:0}
-.layers{max-height:280px;overflow:auto}.layer{display:flex;align-items:center;gap:8px;background:var(--panel2);padding:8px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--line)}.layer .thumb{width:28px;height:28px;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 50%/8px 8px;border-radius:2px}.layer.active{outline:1px solid var(--accent);outline-offset:-1px}
+.layers{max-height:280px;overflow:auto}.layer{cursor:pointer;user-select:none}.layer.dragging{opacity:.45}.layer.dragOver{outline:1px solid var(--accent);outline-offset:-1px}.danger{color:#ff8a8a}
+.layer{display:flex;align-items:center;gap:8px;background:var(--panel2);padding:8px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--line)}.layer .thumb{width:28px;height:28px;background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 50%/8px 8px;border-radius:2px}.layer.active{outline:1px solid var(--accent);outline-offset:-1px}
 .layer .eye{margin-left:auto;border:0;background:transparent;color:var(--text);cursor:pointer}.layer .lock{border:0;background:transparent;color:var(--text);cursor:pointer}.side button.action{width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:5px;padding:7px;cursor:pointer}.textPanel{display:none}.textPanel.show{display:block}.textPanel input,.textPanel select,.textPanel textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:4px;padding:6px}.textPanel textarea{min-height:80px;resize:vertical}
 .status{background:var(--panel);border-top:1px solid var(--line);display:flex;align-items:center;padding:0 10px;color:var(--muted);font-size:11px;gap:16px}
 .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;pointer-events:none}.hidden{display:none!important}
@@ -143,9 +144,8 @@ button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-ro
     <div id="cursorPreview"></div>
   </main>
   <aside class="side">
-    <section class="panel"><h3>레이어</h3><div class="panelBody"><div id="layers" class="layers"></div><button id="newLayerBtn" class="action" style="margin-top:8px">+ 새 레이어</button><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px"><button class="action" data-action="dupLayer">복제</button><button class="action" data-action="layerUp">▲ 위로</button><button class="action" data-action="layerDown">▼ 아래로</button><button class="action" data-action="renameLayer">이름</button><button class="action" data-action="importLayer">이미지+</button><button class="action" data-action="mergeDown">병합</button></div>
-</div></section>
     <section class="panel"><h3>도구 옵션</h3><div class="panelBody"><div class="row"><span>불투명도</span><span id="opacityVal">100%</span></div><input id="opacity" type="range" min="1" max="100" value="100" style="width:100%"><div class="row" style="margin-top:10px"><span>혼합 모드</span><select id="blendMode"><option value="source-over">일반</option><option value="multiply">곱하기</option><option value="screen">스크린</option><option value="overlay">오버레이</option><option value="darken">어둡게</option><option value="lighten">밝게</option><option value="hard-light">하드 라이트</option><option value="soft-light">소프트 라이트</option><option value="difference">차이</option><option value="exclusion">제외</option><option value="color-dodge">색상 닷지</option><option value="color-burn">색상 번</option></select></div></div></section>
+    <section class="panel"><h3>레이어</h3><div class="panelBody"><div id="layers" class="layers"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><button id="newLayerBtn" class="action">+ 새 레이어</button><button class="action" data-action="importLayer">이미지+</button></div><button id="trashLayerBtn" class="action danger" title="선택한 레이어 삭제" style="width:100%;margin-top:6px">🗑 레이어 삭제</button></div></section>
 <section id="textPanel" class="panel textPanel"><h3>텍스트</h3><div class="panelBody">
 <div class="row"><span>글자 크기</span><input id="textPanelSize" type="number" min="1" max="1000" value="48"></div>
 <div class="row"><span>색상</span><input id="textPanelColor" type="color" value="#111111"></div>
@@ -157,6 +157,13 @@ button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-ro
 </div></section>
     <section class="panel"><h3>내보내기</h3><div class="panelBody"><button id="download" class="action">PNG 저장</button></div></section>
   </aside>
+<div id="layerStyleBack" class="modalBack"><div class="textModal" style="min-width:360px;max-width:460px">
+<h3>혼합 옵션</h3><div class="textModalBody">
+<label style="display:flex;align-items:center;gap:8px"><input id="fxStrokeOn" type="checkbox"> 획 <input id="fxStrokeColor" type="color" value="#ffffff"><input id="fxStrokeSize" type="number" min="1" max="100" value="4" style="width:70px">px</label>
+<label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input id="fxGlowOn" type="checkbox"> 광선 <input id="fxGlowColor" type="color" value="#ffffff"><input id="fxGlowSize" type="number" min="1" max="150" value="20" style="width:70px">px</label>
+<label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input id="fxShadowOn" type="checkbox"> 그림자 <input id="fxShadowColor" type="color" value="#000000"><input id="fxShadowSize" type="number" min="1" max="150" value="12" style="width:70px">px</label>
+<div class="modalActions"><button id="fxCancel">취소</button><button id="fxApply" class="primary">적용</button></div>
+</div></div></div>
 <div id="newDocBack" class="modalBack"><div class="textModal newDocModal">
   <h3>새 문서</h3>
   <div class="textModalBody">
@@ -193,19 +200,19 @@ const STORAGE_KEY='photolite-state-v3';
 function persist(){
   if(!canvas.width||!canvas.height||!layers.length)return;
   try{
-    const state={width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode||'source-over',shape:l.shape?{...l.shape}:null,text:l.text?{...l.text}:null,line:l.line?{...l.line}:null,data:l.canvas.toDataURL('image/png')}))};
+    const state={width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode||'source-over',effects:l.effects?{...l.effects}:null,shape:l.shape?{...l.shape}:null,text:l.text?{...l.text}:null,line:l.line?{...l.line}:null,data:l.canvas.toDataURL('image/png')}))};
     localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
   }catch(e){console.warn('저장 공간이 부족합니다.',e)}
 }
 function loadPersisted(){
   try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const s=JSON.parse(raw);if(!s.width||!s.height||!s.layers?.length)return;
-    canvas.width=s.width;canvas.height=s.height;layers=s.layers.map(x=>{const l=makeLayer(x.name);l.visible=x.visible!==false;l.opacity=x.opacity??1;l.locked=!!x.locked;l.blendMode=x.blendMode||'source-over';l.shape=x.shape?{...x.shape}:null;l.text=x.text?{...x.text}:null;l.line=x.line?{...x.line}:null;const im=new Image();im.onload=()=>{l.canvas.getContext('2d').drawImage(im,0,0);render();fit()};im.src=x.data;return l});active=Math.min(s.active||0,layers.length-1);$('empty').classList.add('hidden');$('docStatus').textContent=s.width+' × '+s.height;setTimeout(()=>{render();fit()},50);
+    canvas.width=s.width;canvas.height=s.height;layers=s.layers.map(x=>{const l=makeLayer(x.name);l.visible=x.visible!==false;l.opacity=x.opacity??1;l.locked=!!x.locked;l.blendMode=x.blendMode||'source-over';l.effects=x.effects?{...makeLayer().effects,...x.effects}:{...makeLayer().effects};l.shape=x.shape?{...x.shape}:null;l.text=x.text?{...x.text}:null;l.line=x.line?{...x.line}:null;const im=new Image();im.onload=()=>{l.canvas.getContext('2d').drawImage(im,0,0);render();fit()};im.src=x.data;return l});active=Math.min(s.active||0,layers.length-1);$('empty').classList.add('hidden');$('docStatus').textContent=s.width+' × '+s.height;setTimeout(()=>{render();fit()},50);
   }catch(e){console.warn('복원 실패',e)}
 }
 function iconLayerName(){return layers.length?layers[active]?.name:'Background'}
 function makeLayer(name='레이어'){
   const c=document.createElement('canvas');c.width=canvas.width;c.height=canvas.height;
-  return {name,canvas:c,visible:true,opacity:1,locked:false,blendMode:'source-over',shape:null,text:null,line:null};
+  return {name,canvas:c,visible:true,opacity:1,locked:false,blendMode:'source-over',effects:{stroke:false,strokeColor:'#ffffff',strokeSize:4,glow:false,glowColor:'#ffffff',glowSize:20,shadow:false,shadowColor:'#000000',shadowSize:12},shape:null,text:null,line:null};
 }
 function current(){return layers[active]}
 function setTool(t){tool=t;document.querySelectorAll('.tool[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));const n={move:'이동',brush:'브러시',eraser:'지우개',text:'문자',shape:'도형',fill:'페인트통',crop:'자르기',hand:'손',eyedropper:'스포이드',rectSelect:'선택',gradient:'그라디언트'};$('toolName').textContent=n[t]||t;
@@ -239,50 +246,68 @@ $('selClear').onclick=()=>{selection=null;selectionRegions=[];octx.clearRect(0,0
 
 let persistTimer;
 function schedulePersist(){clearTimeout(persistTimer);persistTimer=setTimeout(()=>{persist();renderLayers()},300)}
+function drawLayerComposite(target,l){
+  if(!l?.visible)return;
+  target.save();target.globalAlpha=l.opacity??1;target.globalCompositeOperation=l.blendMode||'source-over';
+  const fx=l.effects||{};
+  if(fx.shadow){target.shadowColor=fx.shadowColor||'#000';target.shadowBlur=Math.max(0,+fx.shadowSize||0);target.shadowOffsetX=0;target.shadowOffsetY=Math.max(1,(+fx.shadowSize||4)/2);target.drawImage(l.canvas,0,0)}
+  target.shadowColor='transparent';target.shadowBlur=0;target.shadowOffsetX=target.shadowOffsetY=0;
+  if(fx.glow){target.shadowColor=fx.glowColor||'#fff';target.shadowBlur=Math.max(1,+fx.glowSize||20);target.drawImage(l.canvas,0,0)}
+  target.shadowColor='transparent';target.shadowBlur=0;
+  target.drawImage(l.canvas,0,0);
+  if(fx.stroke){const mask=document.createElement('canvas');mask.width=canvas.width;mask.height=canvas.height;const mc=mask.getContext('2d');mc.drawImage(l.canvas,0,0);target.globalCompositeOperation='source-over';target.strokeStyle=fx.strokeColor||'#fff';target.lineWidth=Math.max(1,+fx.strokeSize||4);target.globalAlpha=(l.opacity??1);/* raster alpha outline via blur */target.shadowColor=fx.strokeColor||'#fff';target.shadowBlur=Math.max(0,+fx.strokeSize||4);target.drawImage(mask,0,0);target.shadowColor='transparent';target.shadowBlur=0}
+  target.restore();
+}
 function render(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  layers.forEach(l=>{if(l.visible){ctx.globalAlpha=l.opacity;ctx.globalCompositeOperation=l.blendMode||'source-over';ctx.drawImage(l.canvas,0,0)}});ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+  layers.forEach(l=>drawLayerComposite(ctx,l));
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
   schedulePersist();renderSelection();
 }
+let draggedLayerIndex=null,styleTarget=null;
 function renderLayers(){
   $('layers').innerHTML='';
   [...layers].reverse().forEach((l,ri)=>{
     const i=layers.length-1-ri,el=document.createElement('div');
-    const isSelected=selectedLayers.has(i),isActive=i===active;
+    const isSelected=selectedLayers.has(i);
     el.className='layer'+(isSelected?' active':'');
+    el.draggable=true;el.dataset.index=i;
     el.setAttribute('aria-selected',isSelected?'true':'false');
-    el.innerHTML='<div class="thumb"></div><span></span><button class="lock" title="레이어 잠금">'+(l.locked?'🔒':'🔓')+'</button><button class="eye" title="표시/숨기기">'+(l.visible?'◉':'○')+'</button>';
+    el.innerHTML='<div class="thumb"></div><span class="layerName"></span><button class="lock" title="레이어 잠금">'+(l.locked?'🔒':'🔓')+'</button><button class="eye" title="표시/숨기기">'+(l.visible?'◉':'○')+'</button>';
     el.onclick=e=>{
-      if(e.target.closest('.lock,.eye'))return;
-      if(e.shiftKey){
-        const anchor=layerSelectAnchor??active;
-        const lo=Math.min(anchor,i),hi=Math.max(anchor,i);
-        selectedLayers.clear();
-        for(let j=lo;j<=hi;j++) selectedLayers.add(j);
-        active=i;
-      }else if(e.ctrlKey||e.metaKey){
-        if(selectedLayers.has(i)) selectedLayers.delete(i); else selectedLayers.add(i);
-        active=i;
-        layerSelectAnchor=i;
-      }else{
-        selectedLayers.clear(); selectedLayers.add(i); active=i; layerSelectAnchor=i;
-      }
-      selectedShape=selectedLayers.size===1 ? ((l.shape||l.text||l.image||l.line)?l:null) : null;
-      syncLayerControls();renderLayers();renderSelection();
+      if(e.target.closest('.lock,.eye,.layerName'))return;
+      if(e.shiftKey){const anchor=layerSelectAnchor??active,lo=Math.min(anchor,i),hi=Math.max(anchor,i);selectedLayers.clear();for(let j=lo;j<=hi;j++)selectedLayers.add(j);active=i}
+      else if(e.ctrlKey||e.metaKey){if(selectedLayers.has(i))selectedLayers.delete(i);else selectedLayers.add(i);active=i;layerSelectAnchor=i}
+      else{selectedLayers.clear();selectedLayers.add(i);active=i;layerSelectAnchor=i}
+      selectedShape=selectedLayers.size===1?((l.shape||l.text||l.image||l.line)?l:null):null;syncLayerControls();renderLayers();renderSelection();
     };
-    el.querySelector('span').textContent=l.name;
-    {const tc=document.createElement('canvas');tc.width=tc.height=28;tc.style.display='block';const k=Math.min(28/l.canvas.width,28/l.canvas.height);tc.getContext('2d').drawImage(l.canvas,0,0,l.canvas.width*k,l.canvas.height*k);el.querySelector('.thumb').appendChild(tc)}
-    el.querySelector('.lock').onclick=e=>{e.stopPropagation();l.locked=!l.locked;renderLayers()};
-    el.querySelector('.eye').onclick=e=>{e.stopPropagation();l.visible=!l.visible;render()};
+    el.querySelector('.layerName').textContent=l.name;
+    el.querySelector('.layerName').ondblclick=e=>{e.stopPropagation();renameLayerAt(i)};
+    el.querySelector('.layerName').onclick=e=>e.stopPropagation();
+    el.ondragstart=e=>{draggedLayerIndex=i;el.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(i))};
+    el.ondragend=()=>{draggedLayerIndex=null;document.querySelectorAll('.layer').forEach(x=>x.classList.remove('dragging','dragOver'))};
+    el.ondragover=e=>{e.preventDefault();if(draggedLayerIndex!==null&&draggedLayerIndex!==i)el.classList.add('dragOver');};
+    el.ondragleave=()=>el.classList.remove('dragOver');
+    el.ondrop=e=>{e.preventDefault();el.classList.remove('dragOver');const from=draggedLayerIndex;if(from===null||from===i)return;reorderLayer(from,i)};
+    el.oncontextmenu=e=>{e.preventDefault();e.stopPropagation();styleTarget=i;openLayerStyle(i)};
+    const tc=document.createElement('canvas');tc.width=tc.height=28;tc.style.display='block';const k=Math.min(28/l.canvas.width,28/l.canvas.height);tc.getContext('2d').drawImage(l.canvas,0,0,l.canvas.width*k,l.canvas.height*k);el.querySelector('.thumb').appendChild(tc);
+    el.querySelector('.lock').onclick=e=>{e.stopPropagation();l.locked=!l.locked;renderLayers();persist()};
+    el.querySelector('.eye').onclick=e=>{e.stopPropagation();l.visible=!l.visible;render();persist()};
     $('layers').appendChild(el);
   });
+}
+function reorderLayer(from,to){
+  if(from===to)return;checkpoint();
+  const item=layers.splice(from,1)[0];let target=to;if(from<to)target--;layers.splice(target,0,item);
+  const remap=i=>i===from?target:(from<to?(i>from&&i<=to?i-1:i):(i>=to&&i<from?i+1:i));
+  selectedLayers=new Set([...selectedLayers].map(remap));active=remap(active);layerSelectAnchor=remap(layerSelectAnchor??active);renderLayers();render();persist();
 }
 function sizeOverlay(){overlay.width=canvas.width;overlay.height=canvas.height;overlay.style.width=canvas.style.width;overlay.style.height=canvas.style.height}
 function fit(){if(!canvas.width)return;const wrap=$('wrap'),pad=48;scale=Math.min((wrap.clientWidth-pad)/canvas.width,(wrap.clientHeight-pad)/canvas.height);canvas.style.width=canvas.width*scale+'px';canvas.style.height=canvas.height*scale+'px';sizeOverlay();$('zoom').textContent=Math.round(scale*100)+'%'}
 function setZoom(z){scale=z;canvas.style.width=canvas.width*z+'px';canvas.style.height=canvas.height*z+'px';sizeOverlay();$('zoom').textContent=Math.round(z*100)+'%'}
 function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
-function snapshot(){return {width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode||'source-over',shape:l.shape?{...l.shape}:null,text:l.text?{...l.text}:null,data:l.canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height)}))}}
-function restore(s){canvas.width=s.width;canvas.height=s.height;layers=s.layers.map(x=>{const l=makeLayer(x.name);l.visible=x.visible;l.opacity=x.opacity;l.locked=!!x.locked;l.blendMode=x.blendMode||'source-over';l.shape=x.shape?{...x.shape}:null;l.text=x.text?{...x.text}:null;l.line=x.line?{...x.line}:null;l.canvas.getContext('2d').putImageData(x.data,0,0);return l});active=Math.min(s.active,Math.max(0,layers.length-1));render();fit()}
+function snapshot(){return {width:canvas.width,height:canvas.height,active,layers:layers.map(l=>({name:l.name,visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode||'source-over',effects:l.effects?{...l.effects}:null,shape:l.shape?{...l.shape}:null,text:l.text?{...l.text}:null,data:l.canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height)}))}}
+function restore(s){canvas.width=s.width;canvas.height=s.height;layers=s.layers.map(x=>{const l=makeLayer(x.name);l.visible=x.visible;l.opacity=x.opacity;l.locked=!!x.locked;l.blendMode=x.blendMode||'source-over';l.effects=x.effects?{...makeLayer().effects,...x.effects}:{...makeLayer().effects};l.shape=x.shape?{...x.shape}:null;l.text=x.text?{...x.text}:null;l.line=x.line?{...x.line}:null;l.canvas.getContext('2d').putImageData(x.data,0,0);return l});active=Math.min(s.active,Math.max(0,layers.length-1));render();fit()}
 function checkpoint(){undoStack.push(snapshot());if(undoStack.length>30)undoStack.shift();redoStack=[]}
 function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restore(undoStack.pop())}
 function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restore(redoStack.pop())}
@@ -350,13 +375,14 @@ function flip(h){if(!layers.length)return;checkpoint();layers.forEach(raster);la
 function transformFilter(fn){if(!layers.length)return;filter(fn)}
 function act(a){
   closeMenus();
-  const map={new:newDocument,open:openImage,save,undo,redo,clear:()=>{if(confirm('현재 레이어를 지울까요?')){checkpoint();current().canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);render()}},newLayer:addLayer,saveJpg:()=>saveAs('jpg'),saveWebp:()=>saveAs('webp'),dupLayer,layerUp:()=>moveLayer(1),layerDown:()=>moveLayer(-1),renameLayer,importLayer:()=>$('importInput').click(),adjust:openAdjust,sepia:()=>filterCss('sepia(1)'),resizeImg,deleteLayer,mergeDown,gray:()=>filter('gray'),invert:()=>filter('invert'),bright:()=>filter('bright'),rotateL:()=>rotate(-1),rotateR:()=>rotate(1),flipH:()=>flip(true),flipV:()=>flip(false),fit,zoom50:()=>setZoom(.5),zoom100:()=>setZoom(1),zoom200:()=>setZoom(2),theme:()=>{document.body.classList.toggle('light');document.querySelector('[data-action="theme"]').textContent=document.body.classList.contains('light')?'다크 모드 전환':'화이트 모드 전환'}};
+  const map={new:newDocument,open:openImage,save,undo,redo,clear:()=>{if(confirm('현재 레이어를 지울까요?')){checkpoint();current().canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);render()}},newLayer:addLayer,saveJpg:()=>saveAs('jpg'),saveWebp:()=>saveAs('webp'),dupLayer,mergeSelected,renameLayer,importLayer:()=>$('importInput').click(),adjust:openAdjust,sepia:()=>filterCss('sepia(1)'),resizeImg,deleteLayer,mergeSelected,gray:()=>filter('gray'),invert:()=>filter('invert'),bright:()=>filter('bright'),rotateL:()=>rotate(-1),rotateR:()=>rotate(1),flipH:()=>flip(true),flipV:()=>flip(false),fit,zoom50:()=>setZoom(.5),zoom100:()=>setZoom(1),zoom200:()=>setZoom(2),theme:()=>{document.body.classList.toggle('light');document.querySelector('[data-action="theme"]').textContent=document.body.classList.contains('light')?'다크 모드 전환':'화이트 모드 전환'}};
   if(map[a])map[a]()
 }
 document.querySelectorAll('[data-menu]').forEach(b=>b.onclick=e=>{e.stopPropagation();const m=b.parentElement;document.querySelectorAll('.menu').forEach(x=>x!==m&&x.classList.remove('open'));m.classList.toggle('open')});
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>act(b.dataset.action));
 function closeMenus(){document.querySelectorAll('.menu').forEach(x=>x.classList.remove('open'))}document.addEventListener('click',closeMenus);
-$('fit').onclick=fit;$('clear').onclick=()=>act('clear');$('newLayerBtn').onclick=addLayer;$('download').onclick=save;
+$('fit').onclick=fit;$('clear').onclick=()=>act('clear');$('newLayerBtn').onclick=addLayer;$('trashLayerBtn').onclick=deleteLayer;$('download').onclick=save;
+$('fxApply').onclick=applyLayerStyle;$('fxCancel').onclick=()=>{styleTarget=null;$('layerStyleBack').classList.remove('show')};$('layerStyleBack').onclick=e=>{if(e.target===$('layerStyleBack')){$('layerStyleBack').classList.remove('show');styleTarget=null}};
 $('opacity').oninput=e=>{if(current()&&!current().locked){current().opacity=e.target.value/100;render();persist()}$('opacityVal').textContent=e.target.value+'%'};
 $('blendMode').onchange=e=>{if(current()&&!current().locked){checkpoint();current().blendMode=e.target.value;render();persist()}};
 ['textPanelSize','textPanelColor','textPanelAlign','textPanelLine','textPanelContent','textPanelBold','textPanelItalic'].forEach(id=>$(id).addEventListener('input',updateSelectedText));
@@ -534,16 +560,40 @@ canvas.addEventListener('pointerup',e=>{if(tool==='move'&&dragMode){selectionPoi
   if(painting&&e.pointerId===paintingPointerId){const p=point(e);const cc=current().canvas.getContext('2d');brushStroke(cc,lastX,lastY,p.x,p.y);painting=false;paintingPointerId=null;clampToSelection(selMaskBase);selMaskBase=null;render();persist();return}
   if(shapeStart){const p=point(e),q=constrainedShapeEnd(p);octx.clearRect(0,0,overlay.width,overlay.height);if(Math.abs(q.w)>2&&Math.abs(q.h)>2){const type=shapeType(),n=makeLayer('도형 '+layers.filter(x=>x.shape).length+1);n.shape={type,x:q.x,y:q.y,w:q.w,h:q.h,angle:0,fill:$('fillShape').checked,strokeOn:$('strokeShape').checked,color:$('shapeColor').value,fillColor:$('shapeColor').value,strokeColor:$('shapeColor').value,stroke:+$('strokeWidth').value||0,radius:+$('cornerRadius').value||0,sides:+$('shapeSides').value||5};drawShape(n.canvas.getContext('2d'),type,n.shape.x,n.shape.y,n.shape.w,n.shape.h,0,n.shape);const index=active+1;layers.splice(index,0,n);active=index;selectedShape=n;selectedLayers.clear();selectedLayers.add(index)}else restore(shapeSnapshot);shapeStart=null;shapeSnapshot=null;render();persist()}});
 canvas.addEventListener('pointercancel',()=>{painting=false;paintingPointerId=null;if(shapeStart){octx.clearRect(0,0,overlay.width,overlay.height);restore(shapeSnapshot);shapeStart=null;shapeSnapshot=null}});
-document.addEventListener('keydown',e=>{const k=e.key.toLowerCase(),mod=e.ctrlKey||e.metaKey,editing=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);if(!mod||editing)return;if(k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if(k==='y'){e.preventDefault();redo()}else if(k==='s'){e.preventDefault();save()}else if(k==='o'){e.preventDefault();openImage()}else if(k==='n'&&e.shiftKey){e.preventDefault();addLayer()}else if(k==='n'){e.preventDefault();newDocument()}});
+document.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase(),mod=e.ctrlKey||e.metaKey,editing=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
+  if((k==='backspace'||k==='delete')&&!editing){if(selectedLayers.size||layers.length){e.preventDefault();deleteLayer();return}}
+  if(!mod||editing)return;
+  if(k==='z'){e.preventDefault();e.shiftKey?redo():undo()}
+  else if(k==='y'){e.preventDefault();redo()}
+  else if(k==='s'){e.preventDefault();save()}
+  else if(k==='o'){e.preventDefault();openImage()}
+  else if(k==='n'&&e.shiftKey){e.preventDefault();addLayer()}
+  else if(k==='n'){e.preventDefault();newDocument()}
+  else if(k==='j'){e.preventDefault();dupLayer()}
+  else if(k==='i'){e.preventDefault();mergeSelected()}
+});
 
 /* ===== 추가 기능 ===== */
 const cloneC=s=>{const n=document.createElement('canvas');n.width=s.width;n.height=s.height;n.getContext('2d').drawImage(s,0,0);return n};
 function raster(l){if(l&&(l.shape||l.text||l.image)){l.shape=l.text=l.image=null;if(selectedShape===l)selectedShape=null;$('textPanel').classList.remove('show')}}
 function rebuild(w,h,fn){checkpoint();layers.forEach(raster);const old=layers;canvas.width=w;canvas.height=h;layers=old.map(l=>{const n=makeLayer(l.name);Object.assign(n,{visible:l.visible,opacity:l.opacity,locked:l.locked,blendMode:l.blendMode});const c=n.canvas.getContext('2d');c.imageSmoothingQuality='high';fn(c,l.canvas);return n});selectedShape=null;active=Math.min(active,layers.length-1);$('docStatus').textContent=w+' × '+h;render();fit();persist()}
 function resizeImg(){if(!layers.length)return;const w=parseInt(prompt('새 가로 크기(px) · 비율 유지',canvas.width));if(!(w>0)||w>16000)return;const h=Math.max(1,Math.round(canvas.height*w/canvas.width));rebuild(w,h,(c,s)=>c.drawImage(s,0,0,w,h))}
-function dupLayer(){if(!layers.length)return;checkpoint();const s=current(),n=makeLayer(s.name+' 복사');Object.assign(n,{visible:s.visible,opacity:s.opacity,blendMode:s.blendMode,shape:s.shape&&{...s.shape},text:s.text&&{...s.text},image:s.image&&{...s.image}});n.canvas.getContext('2d').drawImage(s.canvas,0,0);layers.splice(active+1,0,n);active++;selectedShape=null;syncLayerControls();render();persist()}
-function moveLayer(d){const j=active+d;if(j<0||j>=layers.length)return;checkpoint();[layers[active],layers[j]]=[layers[j],layers[active]];active=j;render();persist()}
-function renameLayer(){const l=current();if(!l)return;const n=prompt('레이어 이름',l.name);if(n&&n.trim()){checkpoint();l.name=n.trim().slice(0,40);renderLayers();persist()}}
+function dupLayer(){
+  const targets=[...selectedLayers].filter(i=>i>=0&&i<layers.length).sort((a,b)=>a-b);if(!targets.length&&layers.length)targets.push(active);if(!targets.length)return;
+  if(targets.some(i=>layers[i]?.locked))return;checkpoint();
+  const copies=targets.map(i=>{const s=layers[i],n=makeLayer(s.name+' 복사');Object.assign(n,{visible:s.visible,opacity:s.opacity,blendMode:s.blendMode,effects:s.effects&&{...s.effects},shape:s.shape&&{...s.shape},text:s.text&&{...s.text},image:s.image&&{...s.image},line:s.line&&{...s.line}});n.canvas.getContext('2d').drawImage(s.canvas,0,0);return n});
+  const insertAt=Math.max(...targets)+1;layers.splice(insertAt,0,...copies);active=insertAt+copies.length-1;selectedLayers.clear();for(let j=0;j<copies.length;j++)selectedLayers.add(insertAt+j);selectedShape=null;syncLayerControls();renderLayers();render();persist();
+}
+function mergeSelected(){
+  const targets=[...selectedLayers].filter(i=>i>=0&&i<layers.length).sort((a,b)=>a-b);
+  if(targets.length<2)return;if(targets.some(i=>layers[i]?.locked))return;checkpoint();
+  const baseIndex=targets[0],base=layers[baseIndex],bc=base.canvas.getContext('2d');
+  for(let n=1;n<targets.length;n++){const l=layers[targets[n]];bc.save();bc.globalAlpha=l.opacity??1;bc.globalCompositeOperation=l.blendMode||'source-over';bc.drawImage(l.canvas,0,0);bc.restore()}
+  for(let n=targets.length-1;n>0;n--)layers.splice(targets[n],1);
+  active=Math.min(baseIndex,layers.length-1);selectedLayers.clear();selectedLayers.add(active);selectedShape=null;renderLayers();render();persist();
+}
+function moveLayer(d){const j=active+d;if(j<0||j>=layers.length)return;reorderLayer(active,j)}
 function drawImageLayer(l){if(!l?.image)return;const t=l.image,c=l.canvas.getContext('2d');c.clearRect(0,0,canvas.width,canvas.height);c.save();c.translate(t.x+t.w/2,t.y+t.h/2);c.rotate(t.angle||0);c.drawImage(t.img,-t.w/2,-t.h/2,t.w,t.h);c.restore()}
 function addImageLayer(src){const im=new Image();im.onload=()=>{
   if(!layers.length){canvas.width=im.naturalWidth;canvas.height=im.naturalHeight;const bg=makeLayer('배경');bg.image={img:im,x:0,y:0,w:im.naturalWidth,h:im.naturalHeight,angle:0};drawImageLayer(bg);layers=[bg];active=0;selectedShape=bg;$('empty').classList.add('hidden');$('docStatus').textContent=canvas.width+' × '+canvas.height;sizeOverlay()}
